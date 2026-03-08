@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Badge, Button } from 'react-bootstrap';
+import { Container, Card, Badge, Button, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
@@ -38,83 +39,116 @@ const Applications = () => {
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <div className="spinner-border text-primary" role="status" />
+      <Container className="my-3 my-md-5 text-center">
+        <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </Container>
     );
   }
 
   return (
-    <Container className="my-5">
-      <h2 className="mb-4">मेरी अर्ज़ियाँ</h2>
+    <Container className="my-3 my-md-5 py-2">
+      <div className="mb-4">
+        <h2 className="fw-bold mb-2">📋 My Applications</h2>
+        <p className="text-muted">Track all your job applications</p>
+      </div>
 
       {applications.length === 0 ? (
-        <Card>
+        <Card className="shadow-sm border-0 rounded-4">
           <Card.Body className="text-center py-5">
-            <h4>अभी कोई अर्ज़ी नहीं है</h4>
-            <p className="text-muted">काम पर अर्ज़ी भेजें, यहाँ आपकी सभी अर्ज़ियाँ दिखेंगी</p>
+            <div style={{ fontSize: '4rem' }} className="mb-3">📭</div>
+            <h4 className="fw-bold mb-2">No Applications Yet</h4>
+            <p className="text-muted mb-4">Apply to jobs and track them here</p>
+            <Button as={Link} to="/jobs" variant="primary" size="lg" className="rounded-3 px-4">
+              🔍 Browse Jobs
+            </Button>
           </Card.Body>
         </Card>
       ) : (
-        applications.map((app) => (
-          <Card key={app._id} className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <h5>{app.jobId?.title}</h5>
-                  <p className="mb-2">
-                    <strong>मालिक:</strong> {app.employerId?.companyName || 'जानकारी नहीं'}<br />
-                    <strong>जगह:</strong> {app.jobId?.location?.district}, {app.jobId?.location?.state}<br />
-                    <strong>मजदूरी:</strong> ₹{app.jobId?.salary?.amount} / {app.jobId?.salary?.period}<br />
-                    <strong>अर्ज़ी की तारीख:</strong> {new Date(app.applicationDate).toLocaleDateString()}
-                  </p>
-                  {app.appliedMessage && (
-                    <p className="text-muted">
-                      <strong>आपका संदेश:</strong> {app.appliedMessage}
-                    </p>
-                  )}
-                  {app.employerNotes && (
-                    <p className="text-muted">
-                      <strong>मालिक की टिप्पणी:</strong> {app.employerNotes}
-                    </p>
-                  )}
-                </div>
-                <div className="text-end">
-                  <Badge 
-                    bg={
-                      app.status === 'accepted' ? 'success' :
-                      app.status === 'rejected' ? 'danger' :
-                      app.status === 'applied' ? 'primary' : 
-                      app.status === 'completed' ? 'info' : 'secondary'
-                    }
-                    className="mb-2"
-                  >
-                    {app.status === 'accepted'
-                      ? 'स्वीकृत'
-                      : app.status === 'rejected'
-                      ? 'अस्वीकृत'
-                      : app.status === 'applied'
-                      ? 'भेजी गई'
-                      : app.status === 'completed'
-                      ? 'पूरा हुआ'
-                      : 'प्रक्रिया में'}
-                  </Badge>
-                  {app.status === 'applied' && (
-                    <div>
+        <Row>
+          {applications.map((app) => (
+            <Col xs={12} key={app._id} className="mb-3">
+              <Card className="shadow-sm border-0 rounded-4 overflow-hidden">
+                <Card.Body className="p-3 p-md-4">
+                  <Row className="align-items-start">
+                    <Col xs={12} lg={8} className="mb-3 mb-lg-0">
+                      <div className="d-flex align-items-start mb-2">
+                        <div className="me-2" style={{ fontSize: '1.5rem' }}>💼</div>
+                        <div>
+                          <h5 className="fw-bold mb-1">{app.jobId?.title || 'Job'}</h5>
+                          <p className="text-muted small mb-2">
+                            🏢 {app.employerId?.companyName || 'Company'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-2">
+                        <Badge 
+                          bg={
+                            app.status === 'accepted' ? 'success' :
+                            app.status === 'rejected' ? 'danger' :
+                            app.status === 'applied' ? 'primary' : 
+                            app.status === 'completed' ? 'info' : 'secondary'
+                          }
+                          className="me-2 px-3 py-2"
+                          style={{ fontSize: '0.9rem' }}
+                        >
+                          {app.status === 'accepted'
+                            ? '✅ Accepted'
+                            : app.status === 'rejected'
+                            ? '❌ Rejected'
+                            : app.status === 'applied'
+                            ? '📤 Applied'
+                            : app.status === 'completed'
+                            ? '✔️ Completed'
+                            : '⏳ Processing'}
+                        </Badge>
+                      </div>
+
+                      <div className="small">
+                        <p className="mb-1">
+                          <strong>📍 Location:</strong> {app.jobId?.location?.district}, {app.jobId?.location?.state}
+                        </p>
+                        <p className="mb-1">
+                          <strong>💰 Salary:</strong> ₹{app.jobId?.salary?.amount} / {app.jobId?.salary?.period}
+                        </p>
+                        <p className="mb-1">
+                          <strong>📅 Applied:</strong> {new Date(app.applicationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+
+                      {app.appliedMessage && (
+                        <div className="mt-2 p-2 bg-light rounded-3">
+                          <strong className="small">Your Message:</strong>
+                          <p className="mb-0 small text-muted">{app.appliedMessage}</p>
+                        </div>
+                      )}
+                      {app.employerNotes && (
+                        <div className="mt-2 p-2 bg-info bg-opacity-10 rounded-3">
+                          <strong className="small">Employer Note:</strong>
+                          <p className="mb-0 small text-muted">{app.employerNotes}</p>
+                        </div>
+                      )}
+                    </Col>
+                    
+                    <Col xs={12} lg={4} className="text-lg-end">
                       <Button 
                         variant="outline-danger" 
                         size="sm"
+                        className="rounded-3 w-100 w-lg-auto"
                         onClick={() => handleCancel(app._id)}
+                        disabled={app.status !== 'applied'}
                       >
-                        रद्द करें
+                        ❌ Cancel
                       </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        ))
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       )}
     </Container>
   );

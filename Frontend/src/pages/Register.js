@@ -65,165 +65,202 @@ const Register = () => {
   };
 
   return (
-    <Container className="my-5">
+    <Container className="my-3 my-md-5 py-3">
       <Row className="justify-content-center">
-        <Col md={8} lg={6}>
-          <Card>
-            <Card.Body className="p-5">
-              <h2 className="text-center mb-4">रजिस्टर करें</h2>
+        <Col xs={12} sm={11} md={10} lg={7}>
+          <Card className="shadow-lg border-0 rounded-4">
+            <Card.Body className="p-3 p-md-5">
+              <div className="text-center mb-4">
+                <div className="mb-3" style={{ fontSize: '3rem' }}>✨</div>
+                <h2 className="fw-bold mb-2">Create Account</h2>
+                <p className="text-muted">Join the platform in 2 minutes</p>
+              </div>
               
-              {error && <Alert variant="danger">{error}</Alert>}
+              {error && <Alert variant="danger" className="rounded-3">{error}</Alert>}
               
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
-                  <Form.Label>मैं हूँ</Form.Label>
+                  <Form.Label className="fw-semibold">👤 I am a</Form.Label>
                   <Form.Select
                     name="userType"
                     value={formData.userType}
                     onChange={handleChange}
                     required
+                    className="form-select-lg rounded-3"
+                    style={{ fontSize: '1rem' }}
                   >
-                    <option value="worker">मज़दूर</option>
-                    <option value="employer">मालिक</option>
+                    <option value="worker">👷 Worker (Looking for jobs)</option>
+                    <option value="employer">🏢 Employer (Looking to hire)</option>
                   </Form.Select>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>पूरा नाम</Form.Label>
+                  <Form.Label className="fw-semibold">📝 Full Name</Form.Label>
                   <Form.Control
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    placeholder="अपना पूरा नाम लिखें"
+                    placeholder="Enter your full name"
+                    className="form-control-lg rounded-3"
+                    style={{ fontSize: '1rem' }}
                   />
                 </Form.Group>
 
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>ईमेल</Form.Label>
+                      <Form.Label className="fw-semibold">📧 Email</Form.Label>
                       <Form.Control
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        placeholder="अपना ईमेल लिखें"
+                        placeholder="your.email@example.com"
+                        className="form-control-lg rounded-3"
+                        style={{ fontSize: '1rem' }}
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>मोबाइल नंबर</Form.Label>
+                      <Form.Label className="fw-semibold">📱 Mobile</Form.Label>
                       <Form.Control
                         type="tel"
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
                         required
-                        placeholder="मोबाइल नंबर लिखें"
+                        placeholder="10-digit number"
+                        className="form-control-lg rounded-3"
+                        style={{ fontSize: '1rem' }}
+                        maxLength="10"
+                        pattern="[0-9]{10}"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>पासवर्ड</Form.Label>
+                      <Form.Label className="fw-semibold">🔒 Password</Form.Label>
                       <Form.Control
                         type="password"
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
                         required
-                        placeholder="पासवर्ड लिखें"
+                        placeholder="At least 6 characters"
+                        className="form-control-lg rounded-3"
+                        style={{ fontSize: '1rem' }}
+                        minLength="6"
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>पासवर्ड दोबारा लिखें</Form.Label>
+                      <Form.Label className="fw-semibold">🔒 Confirm</Form.Label>
                       <Form.Control
                         type="password"
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         required
-                        placeholder="पासवर्ड फिर से लिखें"
+                        placeholder="Re-enter password"
+                        className="form-control-lg rounded-3"
+                        style={{ fontSize: '1rem' }}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>गाँव</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="village"
-                        value={formData.village}
-                        onChange={handleChange}
-                        placeholder="गाँव का नाम लिखें"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>ज़िला</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="district"
-                        value={formData.district}
-                        onChange={handleChange}
-                        placeholder="ज़िला लिखें"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <div className="bg-light rounded-3 p-3 mb-4">
+                  <h5 className="mb-3 fw-semibold">📍 Location</h5>
+                  <Row>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Village</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="village"
+                          value={formData.village}
+                          onChange={handleChange}
+                          placeholder="Village name"
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">District *</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="district"
+                          value={formData.district}
+                          onChange={handleChange}
+                          required
+                          placeholder="District"
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>राज्य</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        placeholder="राज्य लिखें"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>पिनकोड</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="pincode"
-                        value={formData.pincode}
-                        onChange={handleChange}
-                        placeholder="पिनकोड लिखें"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                  <Row>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">State *</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleChange}
+                          required
+                          placeholder="State"
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">PIN Code</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="pincode"
+                          value={formData.pincode}
+                          onChange={handleChange}
+                          placeholder="6-digit"
+                          className="rounded-3"
+                          maxLength="6"
+                          pattern="[0-9]{6}"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </div>
 
                 <Button 
                   variant="primary" 
                   type="submit" 
-                  className="w-100 mb-3"
+                  className="w-100 py-3 fw-bold rounded-3 mb-3"
+                  size="lg"
                   disabled={loading}
+                  style={{ fontSize: '1.1rem' }}
                 >
-                  {loading ? 'रजिस्टर हो रहा है...' : 'रजिस्टर करें'}
+                  {loading ? '⏳ Creating...' : '✅ Register Now'}
                 </Button>
               </Form>
 
+              <hr className="my-4" />
+
               <div className="text-center">
-                <p>पहले से खाता है? <Link to="/login">यहाँ लॉगिन करें</Link></p>
+                <p className="mb-0">Already have account?</p>
+                <Link to="/login" className="btn btn-outline-primary mt-2 px-4 rounded-3 fw-semibold">
+                  🔐 Login Here
+                </Link>
               </div>
             </Card.Body>
           </Card>
