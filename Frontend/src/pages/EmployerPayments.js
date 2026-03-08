@@ -15,6 +15,8 @@ const EmployerPayments = () => {
   const [releasingPaymentId, setReleasingPaymentId] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const pendingReleasePayments = payments.filter((payment) => payment.status === 'advance_paid');
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -159,6 +161,58 @@ const EmployerPayments = () => {
                         disabled={payingAppId === app._id}
                       >
                         {payingAppId === app._id ? 'हो रहा है...' : 'एडवांस भुगतान करें'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Card className="mb-4 border-success">
+        <Card.Body>
+          <h5 className="mb-3">Final Payment Release (Visible Buttons)</h5>
+          {pendingReleasePayments.length === 0 ? (
+            <p className="text-muted mb-0">No advance payments are waiting for final release.</p>
+          ) : (
+            <Table responsive hover>
+              <thead>
+                <tr>
+                  <th>Worker</th>
+                  <th>Job</th>
+                  <th>Job Status</th>
+                  <th>Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingReleasePayments.map((payment) => (
+                  <tr key={`release-${payment._id}`}>
+                    <td>{payment.workerId?.userId?.name || 'N/A'}</td>
+                    <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
+                    <td>
+                      <Badge bg={payment.applicationId?.status === 'completed' ? 'success' : 'warning'}>
+                        {payment.applicationId?.status === 'completed' ? 'Completed' : 'Pending Completion'}
+                      </Badge>
+                    </td>
+                    <td>₹{payment.amount}</td>
+                    <td>
+                      <Button
+                        size="sm"
+                        variant="success"
+                        onClick={() => handleRelease(payment._id)}
+                        disabled={
+                          releasingPaymentId === payment._id ||
+                          payment.applicationId?.status !== 'completed'
+                        }
+                      >
+                        {releasingPaymentId === payment._id
+                          ? 'Releasing...'
+                          : payment.applicationId?.status === 'completed'
+                          ? 'Release Final Payment'
+                          : 'Waiting for Worker Completion'}
                       </Button>
                     </td>
                   </tr>
