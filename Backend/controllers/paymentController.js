@@ -96,6 +96,16 @@ exports.releasePayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment cannot be released' });
     }
 
+    const application = await Application.findById(payment.applicationId);
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found for this payment' });
+    }
+
+    if (application.status !== 'completed') {
+      return res.status(400).json({ message: 'Worker has not marked the job as completed yet' });
+    }
+
     const employer = await Employer.findOne({ userId: req.userId });
 
     if (!employer) {
@@ -203,8 +213,22 @@ exports.getEmployerPayments = async (req, res) => {
     }
 
     const payments = await Payment.find({ employerId: employer._id })
-      .populate('applicationId', 'jobId')
-      .populate('workerId', 'userId')
+      .populate({
+        path: 'applicationId',
+        select: 'status attendanceCount completionDate jobId',
+        populate: {
+          path: 'jobId',
+          select: 'title',
+        },
+      })
+      .populate({
+        path: 'workerId',
+        select: 'skills experience userId',
+        populate: {
+          path: 'userId',
+          select: 'name phone',
+        },
+      })
       .sort({ createdAt: -1 });
 
     const totalPaid = payments

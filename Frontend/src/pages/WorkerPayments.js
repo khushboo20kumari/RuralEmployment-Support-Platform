@@ -18,7 +18,7 @@ const WorkerPayments = () => {
       setPayments(res.data.payments || []);
       setTotalEarnings(res.data.totalEarnings || 0);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'कमाई की जानकारी लाने में दिक्कत हुई');
+      toast.error(error.response?.data?.message || 'Unable to load earnings information');
     } finally {
       setLoading(false);
     }
@@ -34,27 +34,27 @@ const WorkerPayments = () => {
 
   return (
     <Container className="my-5">
-      <h2 className="mb-4">मेरी कमाई</h2>
+      <h2 className="mb-4">My Earnings</h2>
 
       <Card className="mb-4">
         <Card.Body>
-          <h4 className="mb-0">कुल प्राप्त राशि: ₹{totalEarnings}</h4>
+          <h4 className="mb-0">Total Amount Received: ₹{totalEarnings}</h4>
         </Card.Body>
       </Card>
 
       <Card>
         <Card.Body>
           {payments.length === 0 ? (
-            <p className="text-muted mb-0">अभी कोई भुगतान नहीं मिला।</p>
+            <p className="text-muted mb-0">No payments received yet.</p>
           ) : (
             <Table responsive hover>
               <thead>
                 <tr>
-                  <th>राशि</th>
-                  <th>शुद्ध राशि</th>
-                  <th>तरीका</th>
-                  <th>स्थिति</th>
-                  <th>तारीख</th>
+                  <th>Amount</th>
+                  <th>Net Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -62,10 +62,10 @@ const WorkerPayments = () => {
                   <tr key={payment._id}>
                     <td>₹{payment.amount}</td>
                     <td>₹{payment.netAmount || 0}</td>
-                    <td>{payment.paymentMethod?.replace('_', ' ') || 'जानकारी नहीं'}</td>
+                    <td>{payment.paymentMethod?.replace('_', ' ') || 'Not available'}</td>
                     <td>
                       <Badge bg={payment.status === 'completed' ? 'success' : 'warning'}>
-                        {payment.status === 'completed' ? 'पूरा' : 'लंबित'}
+                        {payment.status === 'completed' ? 'Completed' : 'Pending'}
                       </Badge>
                     </td>
                     <td>{new Date(payment.createdAt).toLocaleDateString()}</td>

@@ -7,10 +7,6 @@ exports.postJob = async (req, res) => {
   try {
     const { title, description, titleHi, descriptionHi, skillsRequired, workType, location, salary, workingHours, numberOfPositions, startDate, endDate, experienceRequired, benefits, accommodation, mealProvided } = req.body;
 
-    if (!req.user.isVerified) {
-      return res.status(403).json({ message: 'Your account is pending admin approval' });
-    }
-
     const employer = await Employer.findOne({ userId: req.userId });
 
     if (!employer) {

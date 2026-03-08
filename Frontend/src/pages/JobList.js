@@ -47,7 +47,7 @@ const JobList = () => {
     return (
       <Container className="my-5 text-center">
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">लोड हो रहा है...</span>
+          <span className="visually-hidden">Loading...</span>
         </div>
       </Container>
     );
@@ -79,38 +79,38 @@ const JobList = () => {
           <Row>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>काम का प्रकार</Form.Label>
+                <Form.Label>Work Type</Form.Label>
                 <Form.Select name="workType" value={filters.workType} onChange={handleFilterChange}>
-                  <option value="">सभी प्रकार</option>
-                  <option value="construction_labour">निर्माण मज़दूर</option>
-                  <option value="factory_helper">फैक्ट्री हेल्पर</option>
-                  <option value="farm_worker">खेती मज़दूर</option>
-                  <option value="domestic_help">घरेलू सहायक</option>
-                  <option value="other">अन्य</option>
+                  <option value="">All Types</option>
+                  <option value="construction_labour">Construction Labour</option>
+                  <option value="factory_helper">Factory Helper</option>
+                  <option value="farm_worker">Farm Worker</option>
+                  <option value="domestic_help">Domestic Help</option>
+                  <option value="other">Other</option>
                 </Form.Select>
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>जगह</Form.Label>
+                <Form.Label>Location</Form.Label>
                 <Form.Control
                   type="text"
                   name="location"
                   value={filters.location}
                   onChange={handleFilterChange}
-                  placeholder="ज़िला लिखें"
+                  placeholder="Enter district"
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label>कम से कम मजदूरी</Form.Label>
+                <Form.Label>Minimum Salary</Form.Label>
                 <Form.Control
                   type="number"
                   name="minSalary"
                   value={filters.minSalary}
                   onChange={handleFilterChange}
-                  placeholder="न्यूनतम मजदूरी"
+                  placeholder="Minimum wage"
                 />
               </Form.Group>
             </Col>
@@ -121,8 +121,8 @@ const JobList = () => {
       {/* Jobs List */}
       {jobs.length === 0 ? (
         <div className="text-center py-5">
-          <h4>😔 {language === 'hi' ? 'कोई काम नहीं मिला' : 'No jobs found'}</h4>
-          <p>{language === 'hi' ? 'फिल्टर बदलकर फिर देखें' : 'Try adjusting filters'}</p>
+          <h4>😔 No jobs found</h4>
+          <p>Try adjusting filters</p>
         </div>
       ) : (
         <Row>
@@ -160,7 +160,7 @@ const JobList = () => {
                         size="sm"
                         className="fw-bold"
                       >
-                        🔍 {language === 'hi' ? 'विवरण देखें' : 'View Details'}
+                        🔍 View Details
                       </Button>
                     </div>
                   </Card.Body>

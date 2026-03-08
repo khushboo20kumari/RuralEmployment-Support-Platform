@@ -3,15 +3,7 @@ import React, { createContext, useState, useEffect } from 'react';
 export const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => {
-    try {
-      const saved = localStorage.getItem('language');
-      return saved === 'en' ? 'en' : 'hi'; // Default to Hindi
-    } catch (error) {
-      console.warn('localStorage not available:', error);
-      return 'hi';
-    }
-  });
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     try {

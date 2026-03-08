@@ -208,6 +208,56 @@ exports.markJobAsCompleted = async (req, res) => {
   }
 };
 
+// Mark Attendance (Worker - once per day per accepted application)
+exports.markAttendance = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const worker = await Worker.findOne({ userId: req.userId });
+
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker profile not found' });
+    }
+
+    if (application.workerId.toString() !== worker._id.toString()) {
+      return res.status(403).json({ message: 'You do not have permission to mark attendance for this application' });
+    }
+
+    if (application.status !== 'accepted') {
+      return res.status(400).json({ message: 'Attendance can be marked only for accepted jobs' });
+    }
+
+    const today = new Date();
+    const alreadyMarkedToday = (application.attendanceRecords || []).some((record) => {
+      const recordDate = new Date(record.date);
+      return recordDate.toDateString() === today.toDateString();
+    });
+
+    if (alreadyMarkedToday) {
+      return res.status(400).json({ message: 'Attendance already marked for today' });
+    }
+
+    application.attendanceRecords.push({ date: today, status: 'present' });
+    application.attendanceCount = (application.attendanceCount || 0) + 1;
+    application.lastAttendanceDate = today;
+    await application.save();
+
+    return res.status(200).json({
+      message: 'Attendance marked successfully',
+      attendanceCount: application.attendanceCount,
+      lastAttendanceDate: application.lastAttendanceDate,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error marking attendance', error: error.message });
+  }
+};
+
 // Cancel Application (Worker)
 exports.cancelApplication = async (req, res) => {
   try {

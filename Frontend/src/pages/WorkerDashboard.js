@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Tabs, Tab, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { applicationAPI, workerAPI, paymentAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
+import { AuthContext } from '../context/AuthContext';
+import DashboardLayout from '../components/DashboardLayout';
+import SimpleBarChart from '../components/SimpleBarChart';
 
 const WorkerDashboard = () => {
   const { t } = useLanguage();
+  const { user } = useContext(AuthContext);
   const [stats, setStats] = useState({
     activeApplications: 0,
     acceptedApplications: 0,
@@ -18,6 +22,7 @@ const WorkerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [completingId, setCompletingId] = useState(null);
+  const [attendanceId, setAttendanceId] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -87,6 +92,19 @@ const WorkerDashboard = () => {
     }
   };
 
+  const handleMarkAttendance = async (applicationId) => {
+    try {
+      setAttendanceId(applicationId);
+      await applicationAPI.markAttendance(applicationId);
+      toast.success('Attendance marked for today');
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to mark attendance');
+    } finally {
+      setAttendanceId(null);
+    }
+  };
+
   if (loading) {
     return (
       <Container className="my-5 text-center">
@@ -97,7 +115,33 @@ const WorkerDashboard = () => {
 
   return (
     <Container className="py-4">
+      <DashboardLayout
+        title="👷 Worker Dashboard"
+        subtitle="Simple menu for easy use"
+        menuItems={[
+          { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
+          { to: '/jobs', label: 'Find Jobs', icon: '🔍' },
+          { to: '/worker/applications', label: 'My Applications', icon: '📋' },
+          { to: '/worker/payments', label: 'My Earnings', icon: '💳' },
+          { to: '/profile', label: 'My Profile', icon: '👤' },
+        ]}
+        accountInfo={{
+          name: user?.name,
+          email: user?.email,
+          type: 'Worker',
+        }}
+      >
       <h2 className="mb-4">🏠 मज़दूर डैशबोर्ड</h2>
+
+      <SimpleBarChart
+        title="Your Work Summary"
+        data={[
+          { label: 'Pending', value: stats.activeApplications, color: '#f59e0b' },
+          { label: 'Accepted', value: stats.acceptedApplications, color: '#0ea5e9' },
+          { label: 'Completed', value: stats.completedJobs, color: '#10b981' },
+          { label: 'Earnings (₹1000)', value: Math.round(stats.totalEarnings / 1000), color: '#6366f1' },
+        ]}
+      />
 
       {/* Profile Completion Alert */}
       {profileCompletion < 100 && (
@@ -253,6 +297,9 @@ const WorkerDashboard = () => {
                           <p className="mb-1 small">
                             <strong>मजदूरी:</strong> ₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}
                           </p>
+                          <p className="mb-1 small">
+                            <strong>Attendance Days:</strong> {app.attendanceCount || 0}
+                          </p>
                           <p className="small text-muted">
                             स्वीकृत तारीख: {new Date(app.acceptedAt || app.createdAt).toLocaleDateString()}
                           </p>
@@ -270,6 +317,15 @@ const WorkerDashboard = () => {
                             className="me-2"
                           >
                             काम देखें
+                          </Button>
+                          <Button 
+                            variant="outline-info" 
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleMarkAttendance(app._id)}
+                            disabled={attendanceId === app._id}
+                          >
+                            {attendanceId === app._id ? 'Marking...' : '📍 Mark Attendance'}
                           </Button>
                           <Button 
                             variant="outline-success" 
@@ -364,6 +420,7 @@ const WorkerDashboard = () => {
           </Card.Body>
         </Card>
       )}
+      </DashboardLayout>
     </Container>
   );
 };

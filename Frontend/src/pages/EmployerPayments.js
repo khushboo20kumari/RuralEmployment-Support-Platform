@@ -178,9 +178,13 @@ const EmployerPayments = () => {
             <Table responsive hover>
               <thead>
                 <tr>
+                  <th>Worker Details</th>
+                  <th>Job</th>
+                  <th>Attendance</th>
                   <th>राशि</th>
                   <th>तरीका</th>
                   <th>स्थिति</th>
+                  <th>Job Status</th>
                   <th>तारीख</th>
                   <th>कार्रवाई</th>
                 </tr>
@@ -188,6 +192,14 @@ const EmployerPayments = () => {
               <tbody>
                 {payments.map((payment) => (
                   <tr key={payment._id}>
+                    <td>
+                      <div className="small">
+                        <div><strong>{payment.workerId?.userId?.name || 'N/A'}</strong></div>
+                        <div className="text-muted">{payment.workerId?.userId?.phone || 'No phone'}</div>
+                      </div>
+                    </td>
+                    <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
+                    <td>{payment.applicationId?.attendanceCount || 0} days</td>
                     <td>₹{payment.amount}</td>
                     <td>{payment.paymentMethod?.replace('_', ' ') || 'जानकारी नहीं'}</td>
                     <td>
@@ -207,6 +219,11 @@ const EmployerPayments = () => {
                           : 'लंबित'}
                       </Badge>
                     </td>
+                    <td>
+                      <Badge bg={payment.applicationId?.status === 'completed' ? 'success' : 'warning'}>
+                        {payment.applicationId?.status === 'completed' ? 'Completed by Worker' : 'Work in Progress'}
+                      </Badge>
+                    </td>
                     <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
                     <td>
                       {payment.status === 'advance_paid' ? (
@@ -214,9 +231,16 @@ const EmployerPayments = () => {
                           size="sm"
                           variant="success"
                           onClick={() => handleRelease(payment._id)}
-                          disabled={releasingPaymentId === payment._id}
+                          disabled={
+                            releasingPaymentId === payment._id ||
+                            payment.applicationId?.status !== 'completed'
+                          }
                         >
-                          {releasingPaymentId === payment._id ? 'हो रहा है...' : 'अंतिम भुगतान जारी करें'}
+                          {releasingPaymentId === payment._id
+                            ? 'हो रहा है...'
+                            : payment.applicationId?.status === 'completed'
+                            ? 'अंतिम भुगतान जारी करें'
+                            : 'Worker completion pending'}
                         </Button>
                       ) : (
                         <span className="text-muted">-</span>

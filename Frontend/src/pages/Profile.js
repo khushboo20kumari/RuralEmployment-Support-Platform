@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Form, Button, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Tabs, Tab, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../context/AuthContext';
 import { authAPI, workerAPI, employerAPI, reviewAPI } from '../services/api';
+import { useLanguage } from '../hooks/useLanguage';
 
 const Profile = () => {
   const { user, loadUser } = useContext(AuthContext);
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
   
@@ -31,10 +33,47 @@ const Profile = () => {
     websiteUrl: '',
   });
 
+  const skillOptions = [
+    { value: 'construction_labour', labelHi: 'निर्माण मजदूरी', labelEn: 'Construction Labour' },
+    { value: 'factory_helper', labelHi: 'फैक्ट्री हेल्पर', labelEn: 'Factory Helper' },
+    { value: 'farm_worker', labelHi: 'खेती मजदूर', labelEn: 'Farm Worker' },
+    { value: 'domestic_help', labelHi: 'घरेलू काम', labelEn: 'Domestic Help' },
+    { value: 'other', labelHi: 'अन्य काम', labelEn: 'Other Work' },
+  ];
+
+  const availabilityOptions = [
+    { value: 'full_time', labelHi: 'पूरा समय', labelEn: 'Full Time' },
+    { value: 'part_time', labelHi: 'आधा समय', labelEn: 'Part Time' },
+    { value: 'seasonal', labelHi: 'मौसमी', labelEn: 'Seasonal' },
+    { value: 'flexible', labelHi: 'लचीला', labelEn: 'Flexible' },
+  ];
+
+  const companyTypeOptions = [
+    { value: '', labelHi: 'चुनें', labelEn: 'Select Type' },
+    { value: 'factory', labelHi: 'फैक्ट्री', labelEn: 'Factory' },
+    { value: 'construction', labelHi: 'कंस्ट्रक्शन', labelEn: 'Construction' },
+    { value: 'farm', labelHi: 'खेती', labelEn: 'Farm' },
+    { value: 'business', labelHi: 'दुकान/व्यापार', labelEn: 'Business' },
+    { value: 'other', labelHi: 'अन्य', labelEn: 'Other' },
+  ];
+
+  const getLabel = (item) => (language === 'hi' ? item.labelHi : item.labelEn);
+
   useEffect(() => {
+    if (!user?._id) return;
     fetchProfile();
     fetchReviews();
-  }, []);
+  }, [user?._id]);
+
+  const toggleSkill = (value) => {
+    const exists = workerProfile.skills.includes(value);
+    setWorkerProfile({
+      ...workerProfile,
+      skills: exists
+        ? workerProfile.skills.filter((s) => s !== value)
+        : [...workerProfile.skills, value],
+    });
+  };
 
   const fetchProfile = async () => {
     try {
@@ -44,7 +83,7 @@ const Profile = () => {
         phone: userRes.data.user.phone,
       });
 
-      if (user.userType === 'worker') {
+      if (userRes.data.user.userType === 'worker') {
         const workerRes = await workerAPI.getProfile();
         setWorkerProfile({
           skills: workerRes.data.worker.skills || [],
@@ -55,7 +94,7 @@ const Profile = () => {
           monthlyRate: workerRes.data.worker.monthlyRate || '',
           availability: workerRes.data.worker.availability || 'flexible',
         });
-      } else if (user.userType === 'employer') {
+      } else if (userRes.data.user.userType === 'employer') {
         const employerRes = await employerAPI.getProfile();
         setEmployerProfile({
           companyName: employerRes.data.employer.companyName || '',
@@ -65,7 +104,7 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      toast.error('Error loading profile');
+      toast.error(language === 'hi' ? 'प्रोफाइल लोड करने में दिक्कत हुई' : 'Error loading profile');
     }
   };
 
@@ -74,7 +113,7 @@ const Profile = () => {
       const response = await reviewAPI.getMyReviews();
       setReviews(response.data.reviews);
     } catch (error) {
-      console.error('Error fetching reviews');
+      console.error('Error fetching reviews', error);
     }
   };
 
@@ -84,9 +123,9 @@ const Profile = () => {
     try {
       await authAPI.updateProfile(userProfile);
       await loadUser();
-      toast.success('Profile updated successfully');
+      toast.success(language === 'hi' ? 'मूल जानकारी सफलतापूर्वक अपडेट हुई' : 'Basic profile updated successfully');
     } catch (error) {
-      toast.error('Error updating profile');
+      toast.error(language === 'hi' ? 'प्रोफाइल अपडेट नहीं हो पाई' : 'Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -97,9 +136,9 @@ const Profile = () => {
     setLoading(true);
     try {
       await workerAPI.updateProfile(workerProfile);
-      toast.success('Worker profile updated successfully');
+      toast.success(language === 'hi' ? 'काम की जानकारी सफलतापूर्वक सेव हो गई' : 'Worker profile updated successfully');
     } catch (error) {
-      toast.error('Error updating worker profile');
+      toast.error(language === 'hi' ? 'काम की जानकारी अपडेट नहीं हो पाई' : 'Error updating worker profile');
     } finally {
       setLoading(false);
     }
@@ -110,55 +149,78 @@ const Profile = () => {
     setLoading(true);
     try {
       await employerAPI.updateProfile(employerProfile);
-      toast.success('Employer profile updated successfully');
+      toast.success(language === 'hi' ? 'कंपनी जानकारी सफलतापूर्वक सेव हो गई' : 'Employer profile updated successfully');
     } catch (error) {
-      toast.error('Error updating employer profile');
+      toast.error(language === 'hi' ? 'कंपनी जानकारी अपडेट नहीं हो पाई' : 'Error updating employer profile');
     } finally {
       setLoading(false);
     }
   };
 
+  if (!user) {
+    return (
+      <Container className="my-5 text-center">
+        <div className="spinner-border text-primary" role="status" />
+      </Container>
+    );
+  }
+
   return (
     <Container className="my-5">
-      <h2 className="mb-4">My Profile</h2>
+      <h2 className="mb-3">{language === 'hi' ? '👤 मेरी प्रोफाइल' : '👤 My Profile'}</h2>
+      <p className="text-muted mb-4">
+        {language === 'hi'
+          ? 'सिर्फ जरूरी जानकारी भरें। जितनी साफ प्रोफाइल होगी, उतनी जल्दी काम मिलेगा।'
+          : 'Fill only needed details. A clear profile helps you get work faster.'}
+      </p>
 
       <Row>
         <Col md={8}>
           <Tabs defaultActiveKey="basic" className="mb-3">
-            <Tab eventKey="basic" title="Basic Info">
-              <Card>
+            <Tab eventKey="basic" title={language === 'hi' ? '1) जरूरी जानकारी' : '1) Basic Info'}>
+              <Card className="simple-profile-card">
                 <Card.Body>
                   <Form onSubmit={handleUserProfileUpdate}>
+                    <h6 className="mb-3">
+                      {language === 'hi' ? 'नाम और मोबाइल सही रखें' : 'Keep your name and mobile correct'}
+                    </h6>
+
                     <Form.Group className="mb-3">
-                      <Form.Label>Name</Form.Label>
+                      <Form.Label>{language === 'hi' ? 'पूरा नाम' : 'Full Name'}</Form.Label>
                       <Form.Control
                         type="text"
                         value={userProfile.name}
+                        placeholder={language === 'hi' ? 'अपना पूरा नाम लिखें' : 'Enter your full name'}
                         onChange={(e) => setUserProfile({ ...userProfile, name: e.target.value })}
                       />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                      <Form.Label>Phone</Form.Label>
+                      <Form.Label>{language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}</Form.Label>
                       <Form.Control
                         type="tel"
                         value={userProfile.phone}
+                        placeholder={language === 'hi' ? '10 अंकों का नंबर लिखें' : 'Enter 10-digit mobile number'}
                         onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
                       />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                      <Form.Label>Email</Form.Label>
+                      <Form.Label>{language === 'hi' ? 'ईमेल' : 'Email'}</Form.Label>
                       <Form.Control
                         type="email"
                         value={user?.email}
                         disabled
                       />
-                      <Form.Text className="text-muted">Email cannot be changed</Form.Text>
+                      <Form.Text className="text-muted">
+                        {language === 'hi' ? 'ईमेल बदला नहीं जा सकता' : 'Email cannot be changed'}
+                      </Form.Text>
                     </Form.Group>
 
                     <Button variant="primary" type="submit" disabled={loading}>
-                      {loading ? 'Updating...' : 'Update Basic Info'}
+                      {loading
+                        ? (language === 'hi' ? 'सेव हो रहा है...' : 'Saving...')
+                        : (language === 'hi' ? 'जानकारी सेव करें' : 'Save Basic Info')}
                     </Button>
                   </Form>
                 </Card.Body>
@@ -166,75 +228,93 @@ const Profile = () => {
             </Tab>
 
             {user.userType === 'worker' && (
-              <Tab eventKey="worker" title="Worker Details">
-                <Card>
+              <Tab eventKey="worker" title={language === 'hi' ? '2) काम की जानकारी' : '2) Work Details'}>
+                <Card className="simple-profile-card">
                   <Card.Body>
                     <Form onSubmit={handleWorkerProfileUpdate}>
+                      <h6 className="mb-2">
+                        {language === 'hi' ? 'आपको जो काम आता है, उसे टिक करें' : 'Tick only the work you can do'}
+                      </h6>
+
                       <Form.Group className="mb-3">
-                        <Form.Label>Skills</Form.Label>
-                        <Form.Select
-                          multiple
-                          value={workerProfile.skills}
-                          onChange={(e) => {
-                            const selected = Array.from(e.target.selectedOptions, option => option.value);
-                            setWorkerProfile({ ...workerProfile, skills: selected });
-                          }}
-                        >
-                          <option value="construction_labour">Construction Labour</option>
-                          <option value="factory_helper">Factory Helper</option>
-                          <option value="farm_worker">Farm Worker</option>
-                          <option value="domestic_help">Domestic Help</option>
-                          <option value="other">Other</option>
-                        </Form.Select>
-                        <Form.Text className="text-muted">Hold Ctrl/Cmd to select multiple</Form.Text>
+                        <Form.Label>{language === 'hi' ? 'कौशल (Skills)' : 'Skills'}</Form.Label>
+                        <div className="simple-skill-grid">
+                          {skillOptions.map((skill) => (
+                            <div className="simple-skill-item" key={skill.value}>
+                              <Form.Check
+                                id={`skill-${skill.value}`}
+                                type="checkbox"
+                                checked={workerProfile.skills.includes(skill.value)}
+                                onChange={() => toggleSkill(skill.value)}
+                                label={getLabel(skill)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <Form.Text className="text-muted">
+                          {language === 'hi'
+                            ? 'एक से ज़्यादा काम भी चुन सकते हैं।'
+                            : 'You can select more than one skill.'}
+                        </Form.Text>
                       </Form.Group>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Experience (years)</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'अनुभव (साल में)' : 'Experience (years)'}</Form.Label>
                         <Form.Control
                           type="number"
+                          min="0"
                           value={workerProfile.experience}
+                          placeholder={language === 'hi' ? 'जैसे: 2' : 'Example: 2'}
                           onChange={(e) => setWorkerProfile({ ...workerProfile, experience: e.target.value })}
                         />
                       </Form.Group>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Experience Details</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'काम का छोटा विवरण' : 'Short work details'}</Form.Label>
                         <Form.Control
                           as="textarea"
                           rows={3}
+                          placeholder={language === 'hi' ? 'जैसे: 2 साल निर्माण का काम किया है' : 'Example: Worked 2 years in construction'}
                           value={workerProfile.experienceDetails}
                           onChange={(e) => setWorkerProfile({ ...workerProfile, experienceDetails: e.target.value })}
                         />
                       </Form.Group>
 
+                      <h6 className="mb-3">{language === 'hi' ? 'अपनी मजदूरी भरें (₹)' : 'Enter your expected wage (₹)'}</h6>
+
                       <Row>
                         <Col md={4}>
                           <Form.Group className="mb-3">
-                            <Form.Label>Hourly Rate (₹)</Form.Label>
+                            <Form.Label>{language === 'hi' ? 'घंटे की दर' : 'Hourly Rate'}</Form.Label>
                             <Form.Control
                               type="number"
+                              min="0"
                               value={workerProfile.hourlyRate}
+                              placeholder={language === 'hi' ? '₹/घंटा' : '₹/hour'}
                               onChange={(e) => setWorkerProfile({ ...workerProfile, hourlyRate: e.target.value })}
                             />
                           </Form.Group>
                         </Col>
                         <Col md={4}>
                           <Form.Group className="mb-3">
-                            <Form.Label>Daily Rate (₹)</Form.Label>
+                            <Form.Label>{language === 'hi' ? 'दिन की दर' : 'Daily Rate'}</Form.Label>
                             <Form.Control
                               type="number"
+                              min="0"
                               value={workerProfile.dailyRate}
+                              placeholder={language === 'hi' ? '₹/दिन' : '₹/day'}
                               onChange={(e) => setWorkerProfile({ ...workerProfile, dailyRate: e.target.value })}
                             />
                           </Form.Group>
                         </Col>
                         <Col md={4}>
                           <Form.Group className="mb-3">
-                            <Form.Label>Monthly Rate (₹)</Form.Label>
+                            <Form.Label>{language === 'hi' ? 'महीने की दर' : 'Monthly Rate'}</Form.Label>
                             <Form.Control
                               type="number"
+                              min="0"
                               value={workerProfile.monthlyRate}
+                              placeholder={language === 'hi' ? '₹/महीना' : '₹/month'}
                               onChange={(e) => setWorkerProfile({ ...workerProfile, monthlyRate: e.target.value })}
                             />
                           </Form.Group>
@@ -242,20 +322,23 @@ const Profile = () => {
                       </Row>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Availability</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'उपलब्धता' : 'Availability'}</Form.Label>
                         <Form.Select
                           value={workerProfile.availability}
                           onChange={(e) => setWorkerProfile({ ...workerProfile, availability: e.target.value })}
                         >
-                          <option value="full_time">Full Time</option>
-                          <option value="part_time">Part Time</option>
-                          <option value="seasonal">Seasonal</option>
-                          <option value="flexible">Flexible</option>
+                          {availabilityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {getLabel(option)}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Form.Group>
 
                       <Button variant="primary" type="submit" disabled={loading}>
-                        {loading ? 'Updating...' : 'Update Worker Profile'}
+                        {loading
+                          ? (language === 'hi' ? 'सेव हो रहा है...' : 'Saving...')
+                          : (language === 'hi' ? 'काम की जानकारी सेव करें' : 'Save Work Details')}
                       </Button>
                     </Form>
                   </Card.Body>
@@ -264,54 +347,60 @@ const Profile = () => {
             )}
 
             {user.userType === 'employer' && (
-              <Tab eventKey="employer" title="Employer Details">
-                <Card>
+              <Tab eventKey="employer" title={language === 'hi' ? '2) कंपनी जानकारी' : '2) Company Details'}>
+                <Card className="simple-profile-card">
                   <Card.Body>
                     <Form onSubmit={handleEmployerProfileUpdate}>
+                      <h6 className="mb-3">{language === 'hi' ? 'कंपनी की साफ जानकारी भरें' : 'Fill clear company details'}</h6>
+
                       <Form.Group className="mb-3">
-                        <Form.Label>Company Name</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'कंपनी का नाम' : 'Company Name'}</Form.Label>
                         <Form.Control
                           type="text"
                           value={employerProfile.companyName}
+                          placeholder={language === 'hi' ? 'जैसे: शर्मा कंस्ट्रक्शन' : 'Example: Sharma Construction'}
                           onChange={(e) => setEmployerProfile({ ...employerProfile, companyName: e.target.value })}
                         />
                       </Form.Group>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Company Type</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'कंपनी का प्रकार' : 'Company Type'}</Form.Label>
                         <Form.Select
                           value={employerProfile.companyType}
                           onChange={(e) => setEmployerProfile({ ...employerProfile, companyType: e.target.value })}
                         >
-                          <option value="">Select Type</option>
-                          <option value="factory">Factory</option>
-                          <option value="construction">Construction</option>
-                          <option value="farm">Farm</option>
-                          <option value="business">Business</option>
-                          <option value="other">Other</option>
+                          {companyTypeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {getLabel(option)}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Form.Group>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Contact Person</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'संपर्क व्यक्ति का नाम' : 'Contact Person'}</Form.Label>
                         <Form.Control
                           type="text"
                           value={employerProfile.contactPerson}
+                          placeholder={language === 'hi' ? 'जैसे: राम शर्मा' : 'Example: Ram Sharma'}
                           onChange={(e) => setEmployerProfile({ ...employerProfile, contactPerson: e.target.value })}
                         />
                       </Form.Group>
 
                       <Form.Group className="mb-3">
-                        <Form.Label>Website URL</Form.Label>
+                        <Form.Label>{language === 'hi' ? 'वेबसाइट (अगर है)' : 'Website (optional)'}</Form.Label>
                         <Form.Control
                           type="url"
                           value={employerProfile.websiteUrl}
+                          placeholder={language === 'hi' ? 'जैसे: https://example.com' : 'Example: https://example.com'}
                           onChange={(e) => setEmployerProfile({ ...employerProfile, websiteUrl: e.target.value })}
                         />
                       </Form.Group>
 
                       <Button variant="primary" type="submit" disabled={loading}>
-                        {loading ? 'Updating...' : 'Update Employer Profile'}
+                        {loading
+                          ? (language === 'hi' ? 'सेव हो रहा है...' : 'Saving...')
+                          : (language === 'hi' ? 'कंपनी जानकारी सेव करें' : 'Save Company Details')}
                       </Button>
                     </Form>
                   </Card.Body>
@@ -319,17 +408,19 @@ const Profile = () => {
               </Tab>
             )}
 
-            <Tab eventKey="reviews" title="Reviews">
-              <Card>
+            <Tab eventKey="reviews" title={language === 'hi' ? '3) रेटिंग और राय' : '3) Ratings & Reviews'}>
+              <Card className="simple-profile-card">
                 <Card.Body>
-                  <h5 className="mb-3">My Reviews</h5>
+                  <h5 className="mb-3">{language === 'hi' ? 'मेरी रेटिंग' : 'My Reviews'}</h5>
                   {reviews.length === 0 ? (
-                    <p className="text-muted">No reviews yet</p>
+                    <p className="text-muted">{language === 'hi' ? 'अभी कोई रेटिंग नहीं मिली।' : 'No reviews yet.'}</p>
                   ) : (
                     reviews.map((review) => (
                       <div key={review._id} className="border-bottom pb-3 mb-3">
                         <div className="d-flex justify-content-between">
-                          <strong>Rating: {review.rating}/5 ⭐</strong>
+                          <strong>
+                            {language === 'hi' ? 'रेटिंग' : 'Rating'}: {review.rating}/5 {'⭐'.repeat(review.rating)}
+                          </strong>
                           <small className="text-muted">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </small>
@@ -345,12 +436,35 @@ const Profile = () => {
         </Col>
 
         <Col md={4}>
-          <Card>
+          <Card className="simple-profile-summary">
             <Card.Body>
-              <h5>Account Summary</h5>
-              <p><strong>Type:</strong> {user?.userType}</p>
-              <p><strong>Email:</strong> {user?.email}</p>
-              <p><strong>Member since:</strong> {new Date(user?.createdAt).toLocaleDateString()}</p>
+              <h5>{language === 'hi' ? 'खाता सारांश' : 'Account Summary'}</h5>
+              <p>
+                <strong>{language === 'hi' ? 'प्रकार' : 'Type'}:</strong>{' '}
+                <Badge bg="secondary">
+                  {user?.userType === 'worker'
+                    ? (language === 'hi' ? 'मज़दूर' : 'Worker')
+                    : user?.userType === 'employer'
+                    ? (language === 'hi' ? 'मालिक' : 'Employer')
+                    : 'Admin'}
+                </Badge>
+              </p>
+              <p><strong>{language === 'hi' ? 'ईमेल' : 'Email'}:</strong> {user?.email}</p>
+              <p>
+                <strong>{language === 'hi' ? 'जुड़ने की तारीख' : 'Member since'}:</strong>{' '}
+                {new Date(user?.createdAt).toLocaleDateString()}
+              </p>
+
+              {user?.userType === 'worker' && (
+                <div className="mt-3">
+                  <h6>{language === 'hi' ? 'झटपट सलाह' : 'Quick Tips'}</h6>
+                  <ul className="small text-muted ps-3 mb-0">
+                    <li>{language === 'hi' ? 'मोबाइल नंबर हमेशा सही रखें' : 'Keep mobile number updated'}</li>
+                    <li>{language === 'hi' ? 'कम से कम 2 कौशल चुनें' : 'Select at least 2 skills'}</li>
+                    <li>{language === 'hi' ? 'दैनिक दर जरूर भरें' : 'Add your daily wage'}</li>
+                  </ul>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>

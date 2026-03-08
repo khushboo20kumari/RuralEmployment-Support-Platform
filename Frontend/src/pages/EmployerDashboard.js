@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { jobAPI, employerAPI } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import DashboardLayout from '../components/DashboardLayout';
+import SimpleBarChart from '../components/SimpleBarChart';
 
 const EmployerDashboard = () => {
+  const { user } = useContext(AuthContext);
   const [stats, setStats] = useState({ jobs: 0, workersHired: 0, activeJobs: 0, pendingApproval: 0 });
   const [myJobs, setMyJobs] = useState([]);
   const [filter, setFilter] = useState('all'); // all, approved, pending, closed
@@ -59,7 +63,33 @@ const EmployerDashboard = () => {
 
   return (
     <Container className="my-5">
+      <DashboardLayout
+        title="🏢 Employer Dashboard"
+        subtitle="Simple options to manage jobs"
+        menuItems={[
+          { to: '/employer/dashboard', label: 'Dashboard', icon: '🏠' },
+          { to: '/employer/post-job', label: 'Post New Job', icon: '➕' },
+          { to: '/employer/payments', label: 'Payments', icon: '💳' },
+          { to: '/jobs', label: 'See Public Jobs', icon: '📋' },
+          { to: '/profile', label: 'Company Profile', icon: '👤' },
+        ]}
+        accountInfo={{
+          name: user?.name,
+          email: user?.email,
+          type: 'Employer',
+        }}
+      >
       <h2 className="mb-4">🏢 मालिक डैशबोर्ड</h2>
+
+      <SimpleBarChart
+        title="Job Status Chart"
+        data={[
+          { label: 'Total Jobs', value: stats.jobs, color: '#5B8DEE' },
+          { label: 'Active Jobs', value: stats.activeJobs, color: '#10b981' },
+          { label: 'Pending Approval', value: stats.pendingApproval, color: '#f59e0b' },
+          { label: 'Workers Hired', value: stats.workersHired, color: '#0ea5e9' },
+        ]}
+      />
 
       {/* Stats Cards */}
       <Row className="mb-4">
@@ -209,6 +239,7 @@ const EmployerDashboard = () => {
           </Card>
         </Col>
       </Row>
+      </DashboardLayout>
     </Container>
   );
 };

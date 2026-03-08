@@ -9,7 +9,7 @@ export const useLanguage = () => {
     console.error('useLanguage must be used within LanguageProvider');
     // Return default values if context is not available
     return {
-      language: 'hi',
+      language: 'en',
       toggleLanguage: () => console.warn('Language toggle not available'),
       t: (path) => path
     };

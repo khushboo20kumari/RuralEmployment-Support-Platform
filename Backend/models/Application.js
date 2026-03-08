@@ -31,6 +31,28 @@ const applicationSchema = new mongoose.Schema({
   acceptedDate: Date,
   startDate: Date,
   completionDate: Date,
+  attendanceCount: {
+    type: Number,
+    default: 0,
+  },
+  lastAttendanceDate: Date,
+  attendanceRecords: [
+    {
+      date: {
+        type: Date,
+        required: true,
+      },
+      status: {
+        type: String,
+        enum: ['present'],
+        default: 'present',
+      },
+      markedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
