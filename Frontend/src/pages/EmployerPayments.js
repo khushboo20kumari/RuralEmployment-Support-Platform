@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Form, Button, Badge, Alert } from 'react-bootstrap';
+import { Container, Card, Table, Form, Button, Badge, Alert, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { paymentAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
@@ -175,9 +175,12 @@ const EmployerPayments = () => {
         <Card.Body>
           <h5 className="mb-3">Final Payment Release (Visible Buttons)</h5>
           {pendingReleasePayments.length === 0 ? (
-            <p className="text-muted mb-0">No advance payments are waiting for final release.</p>
+            <Alert variant="warning" className="mb-0">
+              अभी कोई <strong>advance_paid</strong> payment नहीं है। पहले एडवांस भुगतान करें, फिर यहाँ final release button दिखेगा।
+            </Alert>
           ) : (
-            <Table responsive hover>
+            <>
+            <Table responsive hover className="d-none d-md-table">
               <thead>
                 <tr>
                   <th>Worker</th>
@@ -219,6 +222,39 @@ const EmployerPayments = () => {
                 ))}
               </tbody>
             </Table>
+
+            <div className="d-md-none">
+              {pendingReleasePayments.map((payment) => (
+                <Card key={`release-mobile-${payment._id}`} className="mb-3 border-0 shadow-sm">
+                  <Card.Body>
+                    <div className="mb-2"><strong>Worker:</strong> {payment.workerId?.userId?.name || 'N/A'}</div>
+                    <div className="mb-2"><strong>Job:</strong> {payment.applicationId?.jobId?.title || 'N/A'}</div>
+                    <div className="mb-3">
+                      <Badge bg={payment.applicationId?.status === 'completed' ? 'success' : 'warning'}>
+                        {payment.applicationId?.status === 'completed' ? 'Completed' : 'Pending Completion'}
+                      </Badge>
+                    </div>
+                    <Button
+                      className="w-100"
+                      size="sm"
+                      variant="success"
+                      onClick={() => handleRelease(payment._id)}
+                      disabled={
+                        releasingPaymentId === payment._id ||
+                        payment.applicationId?.status !== 'completed'
+                      }
+                    >
+                      {releasingPaymentId === payment._id
+                        ? 'Releasing...'
+                        : payment.applicationId?.status === 'completed'
+                        ? 'Release Final Payment'
+                        : 'Waiting for Worker Completion'}
+                    </Button>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+            </>
           )}
         </Card.Body>
       </Card>
@@ -280,25 +316,31 @@ const EmployerPayments = () => {
                     </td>
                     <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
                     <td>
-                      {payment.status === 'advance_paid' ? (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          onClick={() => handleRelease(payment._id)}
-                          disabled={
-                            releasingPaymentId === payment._id ||
-                            payment.applicationId?.status !== 'completed'
-                          }
-                        >
-                          {releasingPaymentId === payment._id
-                            ? 'हो रहा है...'
-                            : payment.applicationId?.status === 'completed'
-                            ? 'अंतिम भुगतान जारी करें'
-                            : 'Worker completion pending'}
-                        </Button>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
+                      <Button
+                        size="sm"
+                        variant={payment.status === 'advance_paid' ? 'success' : 'secondary'}
+                        onClick={() => handleRelease(payment._id)}
+                        disabled={
+                          payment.status !== 'advance_paid' ||
+                          releasingPaymentId === payment._id ||
+                          payment.applicationId?.status !== 'completed'
+                        }
+                        title={
+                          payment.status !== 'advance_paid'
+                            ? 'Final release works only for advance paid records'
+                            : payment.applicationId?.status !== 'completed'
+                            ? 'Worker completion pending'
+                            : 'Release final payment'
+                        }
+                      >
+                        {releasingPaymentId === payment._id
+                          ? 'हो रहा है...'
+                          : payment.status !== 'advance_paid'
+                          ? 'Final release not needed'
+                          : payment.applicationId?.status === 'completed'
+                          ? 'अंतिम भुगतान जारी करें'
+                          : 'Worker completion pending'}
+                      </Button>
                     </td>
                   </tr>
                 ))}
