@@ -1,0 +1,25 @@
+{
+  "name": "rural-employment-platform",
+  "version": "1.0.0",
+  "description": "Rural Employment Support Platform - Full Stack Application",
+  "scripts": {
+    "install-backend": "cd Backend && npm install",
+    "install-frontend": "cd Frontend && npm install",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "backend": "cd Backend && npm run dev",
+    "frontend": "cd Frontend && npm start",
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c green,blue \"npm run backend\" \"npm run frontend\""
+  },
+  "keywords": [
+    "rural",
+    "employment",
+    "platform",
+    "jobs",
+    "workers"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
