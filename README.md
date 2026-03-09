@@ -226,54 +226,269 @@ The platform generates revenue through:
 - Secure payment handling
 - ID verification system
 
-## 🚀 Deployment
+## 🚀 Deployment Guide (Complete with Data)
 
-### 1) MongoDB Atlas Setup
-1. Create a MongoDB Atlas cluster.
-2. Create DB user and password.
-3. In Network Access, allow your hosting provider IPs (or `0.0.0.0/0` for quick setup).
-4. Copy connection string as `MONGODB_URI`.
+### Prerequisites
+- GitHub account with repository pushed
+- MongoDB Atlas account (free tier available)
+- Render account (free tier available)
+- Vercel account (free tier available)
 
-### 2) Backend Deployment (Render)
-This repository includes [render.yaml](render.yaml) for quick setup.
+### Step 1: MongoDB Atlas Setup (With Data)
 
-1. Push project to GitHub.
-2. In Render, create service from repository (Blueprint or manual Web Service).
-3. Use `Backend` as root directory.
-4. Build command: `npm install`
-5. Start command: `npm start`
-6. Configure environment variables:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - `JWT_EXPIRE=7d`
-   - `FRONTEND_URL` (your Vercel frontend URL)
-   - `NODE_ENV=production`
-   - `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` (if using payments)
-7. Deploy and copy backend URL (example: `https://your-backend.onrender.com`).
+#### 1.1 Create Cluster
+1. Go to https://cloud.mongodb.com
+2. Create a new Project
+3. Create a **Cluster** (FREE tier is fine)
+4. Click "Connect" and note the connection details
 
-### 3) Frontend Deployment (Vercel)
-This repository includes [Frontend/vercel.json](Frontend/vercel.json) for SPA route support.
+#### 1.2 Create Database User
+1. In MongoDB Atlas, go to **"Database Access"** → **"Add New Database User"**
+2. Choose "Password" authentication
+3. Create username and password
+4. Select **"Atlas Admin"** role (for full access)
+5. Click **"Create User"**
+6. Save the credentials securely
 
-1. Import repository in Vercel.
-2. Set Root Directory to `Frontend`.
-3. Framework preset: Create React App.
-4. Add environment variables:
-   - `REACT_APP_API_URL=https://your-backend.onrender.com/api`
-   - `REACT_APP_RAZORPAY_KEY_ID` (if using payments)
-5. Deploy.
+#### 1.3 Configure Network Access
+1. Go to **"Network Access"** (left sidebar under Security)
+2. Click **"Add IP Address"**
+3. Click **"Allow Access from Anywhere"** button
+4. This adds `0.0.0.0/0` (required for Render dynamic IPs)
+5. Click **"Confirm"** and wait for status to become ACTIVE (1-2 minutes)
 
-### 4) Final CORS + API check
-1. Update backend `FRONTEND_URL` with deployed Vercel URL.
-2. Redeploy backend.
-3. Test:
-   - Register/Login
-   - Post Job
-   - Browse Jobs
-   - Payments (if enabled)
+#### 1.4 Get Connection String
+1. Click "Connect" on your cluster
+2. Select "Drivers" → "Node.js"
+3. Copy the connection string
+4. Replace `<username>` and `<password>` with your actual credentials
+5. Replace `<dbname>` with `rural_employment`
+
+**Example:**
+```
+mongodb+srv://username:password@cluster0.abc123.mongodb.net/rural_employment?retryWrites=true&w=majority
+```
+
+#### 1.5 Populate Test Data (Optional)
+1. Navigate to Backend:
+```bash
+cd Backend
+npm install
+```
+
+2. Create `.env` file in Backend with:
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster0.abc123.mongodb.net/rural_employment?retryWrites=true&w=majority
+JWT_SECRET=your_random_secret_key_here
+JWT_EXPIRE=7d
+NODE_ENV=development
+PORT=5000
+```
+
+3. Run seed script to add test data:
+```bash
+node seed.js
+```
+
+This creates:
+- 1 Admin user (admin@ruralemp.com / admin123)
+- 3 Worker accounts
+- 2 Employer accounts
+- 5 sample jobs with approval status
+- Payment records
+
+**Test Credentials:**
+```
+Admin:    admin@ruralemp.com / admin123
+Worker:   rajesh@worker.com / password123
+Employer: priya@employer.com / password123
+```
+
+---
+
+### Step 2: Backend Deployment (Render)
+
+#### 2.1 Push to GitHub
+```bash
+# From project root
+git add .
+git commit -m "Prepare for deployment"
+git push origin main
+```
+
+#### 2.2 Create Render Service
+1. Go to https://render.com
+2. Click **"New +"** → **"Web Service"**
+3. Select **"Build and deploy from a Git repository"**
+4. Connect your GitHub repository
+5. Configure:
+   - **Name:** `rural-employment-api`
+   - **Root Directory:** `Backend`
+   - **Runtime:** Node
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Plan:** Free (or paid if needed)
+
+#### 2.3 Add Environment Variables in Render
+Click **"Environment"** and add:
+
+```
+MONGODB_URI=mongodb+srv://username:password@cluster0.abc123.mongodb.net/rural_employment?retryWrites=true&w=majority
+JWT_SECRET=your_random_secret_key_here
+JWT_EXPIRE=7d
+NODE_ENV=production
+PORT=5000
+FRONTEND_URL=(leave blank for now, update after Vercel deployment)
+RAZORPAY_KEY_ID=rzp_test_XXXXXXXX
+RAZORPAY_KEY_SECRET=razorpay_secret_key_here
+```
+
+#### 2.4 Deploy
+1. Click **"Create Web Service"**
+2. Render will build and deploy automatically
+3. Wait for message: **"Your service is live 🎉"**
+4. Copy your backend URL (example: `https://rural-employment-api.onrender.com`)
+5. Note: First deployment may take 2-3 minutes
+
+---
+
+### Step 3: Frontend Deployment (Vercel)
+
+#### 3.1 Deploy to Vercel
+1. Go to https://vercel.com
+2. Click **"Add New..."** → **"Project"**
+3. **"Import Git Repository"**
+4. Select your GitHub repository
+5. Configure:
+   - **Framework Preset:** Create React App
+   - **Root Directory:** `Frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `build`
+
+#### 3.2 Add Environment Variables in Vercel
+Click **"Environment Variables"** and add:
+
+```
+REACT_APP_API_URL=https://your-backend-url.onrender.com/api
+REACT_APP_RAZORPAY_KEY_ID=rzp_test_XXXXXXXX
+```
+
+(Replace `your-backend-url` with your actual Render backend URL)
+
+#### 3.3 Deploy
+1. Click **"Deploy"**
+2. Vercel will build and deploy automatically
+3. Get your frontend URL (example: `https://your-app.vercel.app`)
+4. Wait for deployment to complete
+
+---
+
+### Step 4: Update Backend CORS Configuration
+
+#### 4.1 Add Frontend URL to Render
+1. Go to Render dashboard
+2. Click your backend service
+3. Go to **"Environment"**
+4. Update `FRONTEND_URL` with your Vercel URL:
+   ```
+   FRONTEND_URL=https://your-app.vercel.app
+   ```
+5. Click **"Save"** (this will redeploy automatically)
+
+#### 4.2 Verify CORS is Working
+- Go to your Vercel frontend URL
+- Try to login or register
+- If successful, CORS is configured correctly
+
+---
+
+### Step 5: Test Complete Application
+
+#### 5.1 Test Login Flow
+1. Go to your frontend URL
+2. Login with test credentials (example):
+   - Email: `admin@ruralemp.com`
+   - Password: `admin123`
+3. Verify you reach the dashboard
+
+#### 5.2 Test Job Posting (Employer)
+1. Login as employer (`priya@employer.com / password123`)
+2. Go to **"Post Job"**
+3. Fill job details and submit
+4. Verify job appears in admin dashboard pending approval
+5. As admin, approve the job
+6. Verify job now appears in worker job listings
+
+#### 5.3 Test Job Application (Worker)
+1. Login as worker (`rajesh@worker.com / password123`)
+2. Browse available jobs
+3. Click **"Apply"** on a job
+4. Check "My Applications" to see status
+
+#### 5.4 Test Payment Flow
+1. As employer, go to **"Applications"**
+2. Accept a worker's application
+3. Click **"Make Payment"**
+4. Use Razorpay test card: `4111 1111 1111 1111`
+5. Enter any CVV and future date
+6. Verify payment appears in both dashboards
+
+---
+
+## 🛠️ Troubleshooting Deployment
+
+### MongoDB Connection Error
+**Error:** `Could not connect to any servers in your MongoDB Atlas cluster`
+
+**Solution:**
+1. Go to MongoDB Atlas → **Network Access**
+2. Verify `0.0.0.0/0` is showing with **ACTIVE** status
+3. Wait 3-5 minutes if status is PENDING
+4. Go to Render dashboard
+5. Click **"Manual Deploy"** → **"Deploy latest commit"**
+6. Check logs for "MongoDB connected successfully"
+
+### CORS Error in Frontend
+**Error:** `Access to XMLHttpRequest blocked by CORS`
+
+**Solution:**
+1. Verify `REACT_APP_API_URL` in Vercel environment matches your Render backend URL
+2. Verify `FRONTEND_URL` in Render environment matches your Vercel frontend URL
+3. Redeploy both services
+4. Clear browser cache (Ctrl+Shift+Delete)
+
+### Jobs Not Appearing for Workers
+**Issue:** Posted jobs don't show in job listings
+
+**Solution:**
+1. Login as admin
+2. Go to "Admin Dashboard"
+3. Find the job in **"Pending Approvals"**
+4. Click **"Approve"**
+5. Job will now appear for workers
+
+### Payment Not Processing
+**Issue:** Razorpay payment button not working
+
+**Solution:**
+1. Verify `RAZORPAY_KEY_ID` is set in both:
+   - Render backend environment
+   - Vercel frontend environment
+2. Use Razorpay test keys (not production keys)
+3. For testing, use card: `4111 1111 1111 1111`
+
+### Service Goes to Sleep
+**Note:** Free Render instances go to sleep after 15 minutes of inactivity. Upgrade to paid plan for continuous availability.
+
+---
 
 ### Environment Templates
 - Backend template: [Backend/.env.example](Backend/.env.example)
 - Frontend template: [Frontend/.env.example](Frontend/.env.example)
+
+### Deployment Configuration Files
+- Backend: [render.yaml](render.yaml) - Render deployment blueprint
+- Frontend: [Frontend/vercel.json](Frontend/vercel.json) - Vercel SPA routing
 
 ## 📱 User Flow
 

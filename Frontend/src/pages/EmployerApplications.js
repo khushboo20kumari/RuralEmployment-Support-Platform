@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Card, Row, Col, Badge, Button, Form } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -11,11 +11,7 @@ const EmployerApplications = () => {
   const [busyId, setBusyId] = useState(null);
   const [notesById, setNotesById] = useState({});
 
-  useEffect(() => {
-    fetchApplications();
-  }, [jobId]);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       const res = await applicationAPI.getJobApplications(jobId);
       setApplications(res.data.applications || []);
@@ -24,7 +20,11 @@ const EmployerApplications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const updateStatus = async (applicationId, status) => {
     try {

@@ -3,10 +3,8 @@ import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { jobAPI } from '../services/api';
-import { useLanguage } from '../hooks/useLanguage';
 
 const PostJob = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',

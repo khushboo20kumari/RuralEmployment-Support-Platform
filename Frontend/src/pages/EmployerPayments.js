@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Form, Button, Badge, Alert, Row, Col } from 'react-bootstrap';
+import { Container, Card, Table, Form, Button, Badge, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { paymentAPI, applicationAPI } from '../services/api';
-import { useLanguage } from '../hooks/useLanguage';
 
 const EmployerPayments = () => {
-  const { t } = useLanguage();
   const [eligibleApplications, setEligibleApplications] = useState([]);
   const [payments, setPayments] = useState([]);
   const [amountByApp, setAmountByApp] = useState({});
@@ -68,8 +66,6 @@ const EmployerPayments = () => {
 
   const handleCreateAdvance = async (applicationId) => {
     const amount = Number(amountByApp[applicationId]);
-    const paymentMethod = methodByApp[applicationId] || 'upi';
-    const transactionId = txnByApp[applicationId] || '';
 
     if (!process.env.REACT_APP_RAZORPAY_KEY_ID) {
       toast.error('Razorpay Key ID missing hai. Frontend .env me REACT_APP_RAZORPAY_KEY_ID set karein.');

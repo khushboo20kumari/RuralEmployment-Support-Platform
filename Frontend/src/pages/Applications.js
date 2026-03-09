@@ -3,10 +3,8 @@ import { Container, Card, Badge, Button, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '../services/api';
-import { useLanguage } from '../hooks/useLanguage';
 
 const Applications = () => {
-  const { t } = useLanguage();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 

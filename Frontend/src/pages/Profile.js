@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Container, Row, Col, Card, Form, Button, Tabs, Tab, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../context/AuthContext';
@@ -59,23 +59,7 @@ const Profile = () => {
 
   const getLabel = (item) => (language === 'hi' ? item.labelHi : item.labelEn);
 
-  useEffect(() => {
-    if (!user?._id) return;
-    fetchProfile();
-    fetchReviews();
-  }, [user?._id]);
-
-  const toggleSkill = (value) => {
-    const exists = workerProfile.skills.includes(value);
-    setWorkerProfile({
-      ...workerProfile,
-      skills: exists
-        ? workerProfile.skills.filter((s) => s !== value)
-        : [...workerProfile.skills, value],
-    });
-  };
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const userRes = await authAPI.getMe();
       setUserProfile({
@@ -106,15 +90,31 @@ const Profile = () => {
     } catch (error) {
       toast.error(language === 'hi' ? 'प्रोफाइल लोड करने में दिक्कत हुई' : 'Error loading profile');
     }
-  };
+  }, [language]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const response = await reviewAPI.getMyReviews();
       setReviews(response.data.reviews);
     } catch (error) {
       console.error('Error fetching reviews', error);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!user?._id) return;
+    fetchProfile();
+    fetchReviews();
+  }, [user?._id, fetchProfile, fetchReviews]);
+
+  const toggleSkill = (value) => {
+    const exists = workerProfile.skills.includes(value);
+    setWorkerProfile({
+      ...workerProfile,
+      skills: exists
+        ? workerProfile.skills.filter((s) => s !== value)
+        : [...workerProfile.skills, value],
+    });
   };
 
   const handleUserProfileUpdate = async (e) => {

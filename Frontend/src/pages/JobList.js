@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -16,11 +16,7 @@ const JobList = () => {
     minSalary: '',
   });
 
-  useEffect(() => {
-    fetchJobs();
-  }, [filters]);
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       const response = await jobAPI.getAll(filters);
       setJobs(response.data.jobs);
@@ -29,7 +25,11 @@ const JobList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, t]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });

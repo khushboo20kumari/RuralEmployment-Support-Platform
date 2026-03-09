@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Form, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -8,7 +8,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { getLocalizedJobData, getLocalizedWorkType, getLocalizedSalaryPeriod } from '../utils/localization';
 
 const JobDetails = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
@@ -18,11 +18,7 @@ const JobDetails = () => {
   const [applicationMessage, setApplicationMessage] = useState('');
   const [applying, setApplying] = useState(false);
 
-  useEffect(() => {
-    fetchJob();
-  }, [id]);
-
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       const response = await jobAPI.getById(id);
       setJob(response.data.job);
@@ -31,7 +27,11 @@ const JobDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchJob();
+  }, [fetchJob]);
 
   const handleApply = async () => {
     if (!user) {
