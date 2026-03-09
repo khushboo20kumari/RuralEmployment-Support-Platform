@@ -26,7 +26,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['upi', 'bank_transfer', 'digital_wallet', 'cash'],
+    enum: ['upi', 'bank_transfer', 'digital_wallet', 'cash', 'razorpay'],
   },
   status: {
     type: String,
@@ -48,6 +48,8 @@ const paymentSchema = new mongoose.Schema({
   },
   netAmount: Number,
   advancePaymentDate: Date,
+  employerFinalPaymentDate: Date,
+  adminReleaseDate: Date,
   completionPaymentDate: Date,
   transactionId: String,
   upiId: String,
@@ -56,6 +58,10 @@ const paymentSchema = new mongoose.Schema({
     ifsc: String,
     bankName: String,
   },
+  // Razorpay Integration Fields
+  razorpayOrderId: String,
+  razorpayPaymentId: String,
+  razorpaySignature: String,
   description: String,
   createdAt: {
     type: Date,

@@ -128,6 +128,11 @@ exports.updateApplicationStatus = async (req, res) => {
     const { applicationId } = req.params;
     const { status, employerNotes, rejectionReason } = req.body;
 
+    const allowedStatuses = ['shortlisted', 'rejected', 'accepted', 'cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const application = await Application.findById(applicationId);
 
     if (!application) {
@@ -144,6 +149,7 @@ exports.updateApplicationStatus = async (req, res) => {
 
     if (status === 'accepted') {
       updateData.acceptedDate = new Date();
+      updateData.workStarted = false;
     }
 
     if (status === 'rejected') {
@@ -166,6 +172,47 @@ exports.updateApplicationStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating application', error: error.message });
+  }
+};
+
+// Start Work (Employer)
+exports.startWork = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await Application.findById(applicationId);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const employer = await Employer.findOne({ userId: req.userId });
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer profile not found' });
+    }
+
+    if (application.employerId.toString() !== employer._id.toString()) {
+      return res.status(403).json({ message: 'You do not have permission to start this work' });
+    }
+
+    if (application.status !== 'accepted') {
+      return res.status(400).json({ message: 'Only accepted applications can be started' });
+    }
+
+    if (application.workStarted) {
+      return res.status(400).json({ message: 'Work has already been started' });
+    }
+
+    application.workStarted = true;
+    application.workStartedDate = new Date();
+    application.startDate = new Date();
+    await application.save();
+
+    return res.status(200).json({
+      message: 'Work started successfully',
+      application,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error starting work', error: error.message });
   }
 };
 
@@ -208,7 +255,7 @@ exports.markJobAsCompleted = async (req, res) => {
   }
 };
 
-// Mark Attendance (Worker - once per day per accepted application)
+// Mark Attendance (Employer - once per day per accepted application)
 exports.markAttendance = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -219,18 +266,22 @@ exports.markAttendance = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    const worker = await Worker.findOne({ userId: req.userId });
+    const employer = await Employer.findOne({ userId: req.userId });
 
-    if (!worker) {
-      return res.status(404).json({ message: 'Worker profile not found' });
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer profile not found' });
     }
 
-    if (application.workerId.toString() !== worker._id.toString()) {
+    if (application.employerId.toString() !== employer._id.toString()) {
       return res.status(403).json({ message: 'You do not have permission to mark attendance for this application' });
     }
 
     if (application.status !== 'accepted') {
       return res.status(400).json({ message: 'Attendance can be marked only for accepted jobs' });
+    }
+
+    if (!application.workStarted) {
+      return res.status(400).json({ message: 'Start work first, then mark daily attendance' });
     }
 
     const today = new Date();
@@ -243,7 +294,7 @@ exports.markAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Attendance already marked for today' });
     }
 
-    application.attendanceRecords.push({ date: today, status: 'present' });
+    application.attendanceRecords.push({ date: today, status: 'present', markedBy: 'employer' });
     application.attendanceCount = (application.attendanceCount || 0) + 1;
     application.lastAttendanceDate = today;
     await application.save();
@@ -255,6 +306,42 @@ exports.markAttendance = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: 'Error marking attendance', error: error.message });
+  }
+};
+
+// Mark Application as Completed (Employer)
+exports.completeByEmployer = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await Application.findById(applicationId);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const employer = await Employer.findOne({ userId: req.userId });
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer profile not found' });
+    }
+
+    if (application.employerId.toString() !== employer._id.toString()) {
+      return res.status(403).json({ message: 'You do not have permission to complete this work' });
+    }
+
+    if (application.status !== 'accepted') {
+      return res.status(400).json({ message: 'Only accepted work can be completed' });
+    }
+
+    application.status = 'completed';
+    application.completionDate = new Date();
+    await application.save();
+
+    return res.status(200).json({
+      message: 'Work marked as completed. You can now make final payment on platform.',
+      application,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error completing work', error: error.message });
   }
 };
 

@@ -22,7 +22,6 @@ const WorkerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [completingId, setCompletingId] = useState(null);
-  const [attendanceId, setAttendanceId] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -61,7 +60,7 @@ const WorkerDashboard = () => {
       setProfile(profile);
 
       // Calculate stats
-      const active = apps.filter((a) => a.status === 'pending').length;
+      const active = apps.filter((a) => ['applied', 'shortlisted'].includes(a.status)).length;
       const accepted = apps.filter((a) => a.status === 'accepted').length;
       const completed = apps.filter((a) => a.status === 'completed').length;
       const earnings = payments
@@ -86,22 +85,9 @@ const WorkerDashboard = () => {
       const completion = (fields.filter(Boolean).length / fields.length) * 100;
       setProfileCompletion(Math.round(completion));
     } catch (error) {
-      toast.error('डैशबोर्ड लोड करने में दिक्कत हुई');
+      toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleMarkAttendance = async (applicationId) => {
-    try {
-      setAttendanceId(applicationId);
-      await applicationAPI.markAttendance(applicationId);
-      toast.success('Attendance marked for today');
-      fetchDashboardData();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Unable to mark attendance');
-    } finally {
-      setAttendanceId(null);
     }
   };
 
@@ -131,7 +117,12 @@ const WorkerDashboard = () => {
           type: 'Worker',
         }}
       >
-      <h2 className="mb-4">🏠 मज़दूर डैशबोर्ड</h2>
+      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-success text-white">
+        <Card.Body className="p-4">
+          <h2 className="mb-1">👷 Worker Dashboard</h2>
+          <p className="mb-0 text-white-50">Track applications, mark work complete, and monitor earnings.</p>
+        </Card.Body>
+      </Card>
 
       <SimpleBarChart
         title="Your Work Summary"
@@ -145,7 +136,7 @@ const WorkerDashboard = () => {
 
       {/* Profile Completion Alert */}
       {profileCompletion < 100 && (
-        <Card className="mb-4 bg-light border-info">
+        <Card className="mb-4 border-0 shadow-sm rounded-4 bg-light border-info">
           <Card.Body>
             <Row className="align-items-center">
               <Col md={8}>
@@ -166,9 +157,9 @@ const WorkerDashboard = () => {
       )}
 
       {/* Stats Cards */}
-      <Row className="mb-4">
+      <Row className="g-3 mb-4">
         <Col md={3} className="mb-3">
-          <Card className="shadow-sm">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h4 className="text-warning">{stats.activeApplications}</h4>
               <p className="text-muted small mb-0">लंबित अर्ज़ियाँ</p>
@@ -177,7 +168,7 @@ const WorkerDashboard = () => {
           </Card>
         </Col>
         <Col md={3} className="mb-3">
-          <Card className="shadow-sm">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h4 className="text-info">{stats.acceptedApplications}</h4>
               <p className="text-muted small mb-0">स्वीकृत</p>
@@ -186,7 +177,7 @@ const WorkerDashboard = () => {
           </Card>
         </Col>
         <Col md={3} className="mb-3">
-          <Card className="shadow-sm">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h4 className="text-success">{stats.completedJobs}</h4>
               <p className="text-muted small mb-0">पूरा हुआ काम</p>
@@ -195,7 +186,7 @@ const WorkerDashboard = () => {
           </Card>
         </Col>
         <Col md={3} className="mb-3">
-          <Card className="shadow-sm">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h4 className="text-primary">₹{stats.totalEarnings.toLocaleString()}</h4>
               <p className="text-muted small mb-0">कुल कमाई</p>
@@ -208,7 +199,7 @@ const WorkerDashboard = () => {
       {/* Quick Actions */}
       <Row className="mb-4">
         <Col md={12}>
-          <Card className="shadow-sm">
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
               <Row>
                 <Col md={3} className="mb-2">
@@ -238,18 +229,18 @@ const WorkerDashboard = () => {
       </Row>
 
       {/* Applications Tabs */}
-      <Card className="shadow-sm">
+      <Card className="border-0 shadow-sm rounded-4">
         <Card.Header className="bg-light">
           <h5 className="mb-0">📊 आपकी अर्ज़ियाँ</h5>
         </Card.Header>
         <Card.Body>
-          <Tabs defaultActiveKey="pending" className="mb-3">
-            <Tab eventKey="pending" title={`⏳ लंबित (${stats.activeApplications})`}>
-              {applications.filter((a) => a.status === 'pending').length === 0 ? (
+          <Tabs defaultActiveKey="applied" className="mb-3">
+            <Tab eventKey="applied" title={`⏳ Applied (${stats.activeApplications})`}>
+              {applications.filter((a) => ['applied', 'shortlisted'].includes(a.status)).length === 0 ? (
                 <p className="text-muted text-center py-4">कोई लंबित अर्ज़ी नहीं</p>
               ) : (
                 applications
-                  .filter((a) => a.status === 'pending')
+                  .filter((a) => ['applied', 'shortlisted'].includes(a.status))
                   .map((app) => (
                     <div key={app._id} className="border-bottom pb-3 mb-3">
                       <Row>
@@ -301,7 +292,7 @@ const WorkerDashboard = () => {
                             <strong>Attendance Days:</strong> {app.attendanceCount || 0}
                           </p>
                           <p className="small text-muted">
-                            स्वीकृत तारीख: {new Date(app.acceptedAt || app.createdAt).toLocaleDateString()}
+                            स्वीकृत तारीख: {new Date(app.acceptedDate || app.createdAt).toLocaleDateString()}
                           </p>
                         </Col>
                         <Col md={4} className="text-end">
@@ -319,21 +310,12 @@ const WorkerDashboard = () => {
                             काम देखें
                           </Button>
                           <Button 
-                            variant="outline-info" 
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleMarkAttendance(app._id)}
-                            disabled={attendanceId === app._id}
-                          >
-                            {attendanceId === app._id ? 'Marking...' : '📍 Mark Attendance'}
-                          </Button>
-                          <Button 
                             variant="outline-success" 
                             size="sm"
                             onClick={() => handleMarkCompleted(app._id)}
                             disabled={completingId === app._id}
                           >
-                            {completingId === app._id ? '⏳ प्रोसेस हो रहा है...' : '✅ काम पूरा किया'}
+                            {completingId === app._id ? '⏳ Processing...' : '✅ Mark Complete'}
                           </Button>
                         </Col>
                       </Row>
@@ -360,7 +342,7 @@ const WorkerDashboard = () => {
                             <strong>मजदूरी:</strong> ₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}
                           </p>
                           <p className="small text-muted">
-                            पूरा होने की तारीख: {new Date(app.completedAt || app.createdAt).toLocaleDateString()}
+                            पूरा होने की तारीख: {new Date(app.completionDate || app.createdAt).toLocaleDateString()}
                           </p>
                         </Col>
                         <Col md={4} className="text-end">
@@ -383,7 +365,7 @@ const WorkerDashboard = () => {
 
       {/* Profile Info Card */}
       {profile && (
-        <Card className="shadow-sm mt-4">
+        <Card className="border-0 shadow-sm rounded-4 mt-4">
           <Card.Header className="bg-light">
             <h5 className="mb-0">👤 आपकी प्रोफाइल</h5>
           </Card.Header>

@@ -26,8 +26,13 @@ const authMiddleware = async (req, res, next) => {
 
 const checkUserType = (allowedTypes) => {
   return (req, res, next) => {
-    if (!allowedTypes.includes(req.user.userType)) {
-      return res.status(403).json({ message: 'Access denied' });
+    const normalizedUserType = String(req.user.userType || '').trim().toLowerCase();
+    const normalizedAllowedTypes = allowedTypes.map((type) => String(type).trim().toLowerCase());
+
+    if (!normalizedAllowedTypes.includes(normalizedUserType)) {
+      return res.status(403).json({
+        message: `Access denied for role '${req.user.userType}'. Allowed roles: ${allowedTypes.join(', ')}`,
+      });
     }
     next();
   };

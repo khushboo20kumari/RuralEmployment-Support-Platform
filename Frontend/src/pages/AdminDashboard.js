@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [releasingPaymentId, setReleasingPaymentId] = useState(null);
 
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -91,6 +92,19 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleReleasePaymentToWorker = async (paymentId) => {
+    try {
+      setReleasingPaymentId(paymentId);
+      await axios.put(`${API_URL}/payments/admin/${paymentId}/release-to-worker`, {}, { headers: getAuthHeader() });
+      toast.success('Payment released to worker successfully');
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Payment release failed');
+    } finally {
+      setReleasingPaymentId(null);
+    }
+  };
+
   if (loading) {
     return (
       <Container className="my-5 text-center">
@@ -100,33 +114,46 @@ const AdminDashboard = () => {
   }
 
   return (
-    <Container className="my-5">
-      <h2 className="mb-4">🔐 {t('admin.title')}</h2>
+    <Container className="my-4 my-md-5">
+      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
+        <Card.Body className="p-4">
+          <h2 className="mb-1">🔐 {t('admin.title')}</h2>
+          <p className="mb-0 text-white-50">Monitor users, jobs, applications, and payments from one place.</p>
+        </Card.Body>
+      </Card>
 
       {/* Stats Cards */}
-      <Row className="mb-4">
+      <Row className="g-3 mb-4">
         <Col md={3}>
-          <Card className="stat-card mb-3">
-            <h3>{stats.totalUsers}</h3>
-            <p>{t('admin.totalUsers')}</p>
+          <Card className="border-0 shadow-sm rounded-4 h-100">
+            <Card.Body>
+              <div className="text-muted small">{t('admin.totalUsers')}</div>
+              <h3 className="mb-0">{stats.totalUsers}</h3>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3">
-            <h3>{stats.totalJobs}</h3>
-            <p>{t('admin.totalJobs')}</p>
+          <Card className="border-0 shadow-sm rounded-4 h-100">
+            <Card.Body>
+              <div className="text-muted small">{t('admin.totalJobs')}</div>
+              <h3 className="mb-0">{stats.totalJobs}</h3>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3">
-            <h3>{stats.pendingJobs || 0}</h3>
-            <p>{t('admin.pendingJobs')}</p>
+          <Card className="border-0 shadow-sm rounded-4 h-100">
+            <Card.Body>
+              <div className="text-muted small">{t('admin.pendingJobs')}</div>
+              <h3 className="mb-0">{stats.pendingJobs || 0}</h3>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3">
-            <h3>₹{stats.platformRevenue || 0}</h3>
-            <p>{t('admin.platformRevenue')}</p>
+          <Card className="border-0 shadow-sm rounded-4 h-100">
+            <Card.Body>
+              <div className="text-muted small">{t('admin.platformRevenue')}</div>
+              <h3 className="mb-0">₹{stats.platformRevenue || 0}</h3>
+            </Card.Body>
           </Card>
         </Col>
       </Row>
@@ -135,9 +162,9 @@ const AdminDashboard = () => {
       <Tabs defaultActiveKey="users" className="mb-3">
         {/* All Users Tab */}
         <Tab eventKey="users" title={`${t('admin.allUsers')} (${users.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('common.name')}</th>
@@ -204,9 +231,9 @@ const AdminDashboard = () => {
 
         {/* Workers Tab */}
         <Tab eventKey="workers" title={`${t('admin.workers')} (${workers.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('common.name')}</th>
@@ -248,9 +275,9 @@ const AdminDashboard = () => {
 
         {/* Employers Tab */}
         <Tab eventKey="employers" title={`${t('admin.employers')} (${employers.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('common.name')}</th>
@@ -284,9 +311,9 @@ const AdminDashboard = () => {
 
         {/* Jobs Tab */}
         <Tab eventKey="jobs" title={`${t('common.jobs')} (${jobs.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('common.title')}</th>
@@ -348,9 +375,9 @@ const AdminDashboard = () => {
 
         {/* Applications Tab */}
         <Tab eventKey="applications" title={`${t('common.applications')} (${applications.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('admin.worker')}</th>
@@ -388,9 +415,9 @@ const AdminDashboard = () => {
 
         {/* Payments Tab */}
         <Tab eventKey="payments" title={`${t('common.payments')} (${payments.length})`}>
-          <Card>
+          <Card className="border-0 shadow-sm rounded-4">
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>{t('admin.worker')}</th>
@@ -399,6 +426,7 @@ const AdminDashboard = () => {
                     <th>{t('admin.platformFee')}</th>
                     <th>{t('common.status')}</th>
                     <th>{t('common.date')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -407,13 +435,23 @@ const AdminDashboard = () => {
                       <td>{payment.workerId?.userId?.name || 'N/A'}</td>
                       <td>{payment.employerId?.userId?.name || 'N/A'}</td>
                       <td>₹{payment.amount}</td>
-                      <td>₹{payment.platformCommission || 0}</td>
+                      <td>₹{payment.platformFee || 0}</td>
                       <td>
-                        <Badge bg={payment.status === 'completed' ? 'success' : 'warning'}>
-                          {t(`common.${payment.status}`)}
+                        <Badge bg={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'info'}>
+                          {payment.status}
                         </Badge>
                       </td>
                       <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleReleasePaymentToWorker(payment._id)}
+                          disabled={payment.status !== 'pending' || releasingPaymentId === payment._id}
+                        >
+                          {releasingPaymentId === payment._id ? 'Releasing...' : payment.status === 'pending' ? 'Release to Worker' : 'Done'}
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

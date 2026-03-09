@@ -34,7 +34,7 @@ const EmployerDashboard = () => {
         pendingApproval: jobs.filter(j => !j.isApproved).length,
       });
     } catch (error) {
-      toast.error('डैशबोर्ड लोड करने में दिक्कत हुई');
+      toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ const EmployerDashboard = () => {
   }
 
   return (
-    <Container className="my-5">
+    <Container className="my-4 my-md-5">
       <DashboardLayout
         title="🏢 Employer Dashboard"
         subtitle="Simple options to manage jobs"
@@ -79,7 +79,12 @@ const EmployerDashboard = () => {
           type: 'Employer',
         }}
       >
-      <h2 className="mb-4">🏢 मालिक डैशबोर्ड</h2>
+      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-primary text-white">
+        <Card.Body className="p-4">
+          <h2 className="mb-1">🏢 Employer Dashboard</h2>
+          <p className="mb-0 text-white-50">Manage jobs, monitor approvals, and track workforce progress.</p>
+        </Card.Body>
+      </Card>
 
       <SimpleBarChart
         title="Job Status Chart"
@@ -92,36 +97,36 @@ const EmployerDashboard = () => {
       />
 
       {/* Stats Cards */}
-      <Row className="mb-4">
+      <Row className="g-3 mb-4">
         <Col md={3}>
-          <Card className="stat-card mb-3 bg-light">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h3 className="text-primary">{stats.jobs}</h3>
-              <p className="mb-0 small">कुल काम डाले</p>
+              <p className="mb-0 small">Total Jobs Posted</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3 bg-light">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h3 className="text-success">{stats.activeJobs}</h3>
-              <p className="mb-0 small">सक्रिय और मंजूर</p>
+              <p className="mb-0 small">Active & Approved</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3 bg-light">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h3 className="text-warning">{stats.pendingApproval}</h3>
-              <p className="mb-0 small">मंजूरी के लिए लंबित</p>
+              <p className="mb-0 small">Pending Approval</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="stat-card mb-3 bg-light">
+          <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Body className="text-center">
               <h3 className="text-info">{stats.workersHired}</h3>
-              <p className="mb-0 small">नियुक्त किए गए मजदूर</p>
+              <p className="mb-0 small">Workers Hired</p>
             </Card.Body>
           </Card>
         </Col>
@@ -129,53 +134,53 @@ const EmployerDashboard = () => {
 
       <Row>
         <Col md={12}>
-          <Card className="mb-4">
+          <Card className="mb-4 border-0 shadow-sm rounded-4">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5>📋 मेरे डाले हुए काम</h5>
+                <h5>📋 My Posted Jobs</h5>
                 <Button as={Link} to="/employer/post-job" variant="primary">
-                  ➕ नया काम डालें
+                  ➕ Post New Job
                 </Button>
               </div>
 
               {/* Filter Tabs */}
-              <div className="mb-3 d-flex gap-2">
+              <div className="mb-3 d-flex gap-2 flex-wrap">
                 <Button 
                   variant={filter === 'all' ? 'primary' : 'outline-primary'} 
                   size="sm"
                   onClick={() => setFilter('all')}
                 >
-                  सभी ({myJobs.length})
+                  All ({myJobs.length})
                 </Button>
                 <Button 
                   variant={filter === 'approved' ? 'success' : 'outline-success'} 
                   size="sm"
                   onClick={() => setFilter('approved')}
                 >
-                  ✓ मंजूर ({myJobs.filter(j => j.isApproved).length})
+                  ✓ Approved ({myJobs.filter(j => j.isApproved).length})
                 </Button>
                 <Button 
                   variant={filter === 'pending' ? 'warning' : 'outline-warning'} 
                   size="sm"
                   onClick={() => setFilter('pending')}
                 >
-                  ⏳ लंबित ({myJobs.filter(j => !j.isApproved).length})
+                  ⏳ Pending ({myJobs.filter(j => !j.isApproved).length})
                 </Button>
                 <Button 
                   variant={filter === 'closed' ? 'danger' : 'outline-danger'} 
                   size="sm"
                   onClick={() => setFilter('closed')}
                 >
-                  बंद ({myJobs.filter(j => j.jobStatus === 'closed').length})
+                  Closed ({myJobs.filter(j => j.jobStatus === 'closed').length})
                 </Button>
               </div>
 
               {getFilteredJobs().length === 0 ? (
                 <p className="text-muted text-center py-5">
-                  {filter === 'pending' && 'मंजूरी के लिए कोई काम नहीं'}
-                  {filter === 'approved' && 'कोई मंजूर काम नहीं'}
-                  {filter === 'closed' && 'कोई बंद काम नहीं'}
-                  {filter === 'all' && 'अभी कोई काम नहीं डाला'}
+                  {filter === 'pending' && 'No jobs pending approval'}
+                  {filter === 'approved' && 'No approved jobs'}
+                  {filter === 'closed' && 'No closed jobs'}
+                  {filter === 'all' && 'No jobs posted yet'}
                 </p>
               ) : (
                 getFilteredJobs().map((job) => (
@@ -184,31 +189,31 @@ const EmployerDashboard = () => {
                       <Col md={7}>
                         <h6 className="mb-2">{job.title}</h6>
                         <p className="mb-1 small">
-                          <strong>काम का प्रकार:</strong> {job.workType?.replace('_', ' ')}
+                          <strong>Job Type:</strong> {job.workType?.replace('_', ' ')}
                         </p>
                         <p className="mb-1 small">
-                          <strong>जगह:</strong> {job.location?.district}, {job.location?.state}
+                          <strong>Location:</strong> {job.location?.district}, {job.location?.state}
                         </p>
                         <p className="mb-1 small">
-                          <strong>मजदूरी:</strong> ₹{job.salary?.amount} / {job.salary?.period}
+                          <strong>Salary:</strong> ₹{job.salary?.amount} / {job.salary?.period}
                         </p>
                         <p className="mb-1 small">
-                          <strong>कुल जगह:</strong> {job.numberOfPositions}
+                          <strong>Total Positions:</strong> {job.numberOfPositions}
                         </p>
                       </Col>
                       <Col md={5} className="text-end">
                         <div className="mb-2">
                           {!job.isApproved ? (
                             <span className="badge bg-warning text-dark me-2">
-                              ⏳ एडमिन मंजूरी के लिए
+                              ⏳ Pending Admin Approval
                             </span>
                           ) : (
                             <span className="badge bg-success me-2">
-                              ✓ मंजूर
+                              ✓ Approved
                             </span>
                           )}
                           <span className={`badge bg-${job.jobStatus === 'open' ? 'info' : 'secondary'}`}>
-                            {job.jobStatus === 'open' ? '🟢 खुला' : '🔴 बंद'}
+                            {job.jobStatus === 'open' ? '🟢 Open' : '🔴 Closed'}
                           </span>
                         </div>
                         <div className="mt-3">
@@ -223,7 +228,7 @@ const EmployerDashboard = () => {
                           </Button>
                           <Button 
                             as={Link} 
-                            to={`/applications/${job._id}`} 
+                            to={`/employer/applications/${job._id}`} 
                             variant="outline-info" 
                             size="sm"
                           >

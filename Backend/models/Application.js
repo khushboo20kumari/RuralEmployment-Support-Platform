@@ -47,12 +47,22 @@ const applicationSchema = new mongoose.Schema({
         enum: ['present'],
         default: 'present',
       },
+      markedBy: {
+        type: String,
+        enum: ['worker', 'employer'],
+        default: 'employer',
+      },
       markedAt: {
         type: Date,
         default: Date.now,
       },
     },
   ],
+  workStarted: {
+    type: Boolean,
+    default: false,
+  },
+  workStartedDate: Date,
   createdAt: {
     type: Date,
     default: Date.now,

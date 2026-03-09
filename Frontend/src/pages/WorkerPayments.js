@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Badge } from 'react-bootstrap';
+import { Container, Card, Table, Badge, Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { paymentAPI } from '../services/api';
+import { applicationAPI } from '../services/api';
 
 const WorkerPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -21,6 +22,18 @@ const WorkerPayments = () => {
       toast.error(error.response?.data?.message || 'Unable to load earnings information');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkComplete = async (applicationId) => {
+    if (!window.confirm('Have you completed this job?')) return;
+
+    try {
+      await applicationAPI.markAsCompleted(applicationId);
+      toast.success('Job marked complete successfully');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to mark job complete');
     }
   };
 
@@ -50,25 +63,47 @@ const WorkerPayments = () => {
             <Table responsive hover>
               <thead>
                 <tr>
+                  <th>Job</th>
                   <th>Amount</th>
                   <th>Net Amount</th>
                   <th>Method</th>
                   <th>Status</th>
                   <th>Date</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {payments.map((payment) => (
                   <tr key={payment._id}>
+                    <td>{payment.applicationId?.jobId?.title || 'Job'}</td>
                     <td>₹{payment.amount}</td>
                     <td>₹{payment.netAmount || 0}</td>
                     <td>{payment.paymentMethod?.replace('_', ' ') || 'Not available'}</td>
                     <td>
-                      <Badge bg={payment.status === 'completed' ? 'success' : 'warning'}>
-                        {payment.status === 'completed' ? 'Completed' : 'Pending'}
+                      <Badge bg={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'info'}>
+                        {payment.status === 'completed'
+                          ? 'Received'
+                          : payment.status === 'pending'
+                          ? 'Admin Release Pending'
+                          : 'In Process'}
                       </Badge>
                     </td>
                     <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      {payment.applicationId?.status === 'accepted' ? (
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleMarkComplete(payment.applicationId?._id)}
+                        >
+                          Mark Complete
+                        </Button>
+                      ) : payment.applicationId?.status === 'completed' ? (
+                        <span className="text-success small">Completed</span>
+                      ) : (
+                        <span className="text-muted small">N/A</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

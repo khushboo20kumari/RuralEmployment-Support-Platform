@@ -6,7 +6,9 @@ import { AuthContext } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import DashboardLayout from './components/DashboardLayout';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
+import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import WorkerDashboard from './pages/WorkerDashboard';
@@ -19,6 +21,7 @@ import Applications from './pages/Applications';
 import Profile from './pages/Profile';
 import EmployerPayments from './pages/EmployerPayments';
 import WorkerPayments from './pages/WorkerPayments';
+import EmployerApplications from './pages/EmployerApplications';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const HomeResolver = () => {
@@ -104,8 +107,10 @@ function App() {
           <div className="App">
             <Navbar />
             <ToastContainer position="top-right" autoClose={3000} />
+            <main className="flex-grow-1">
             <Routes>
               <Route path="/" element={<HomeResolver />} />
+              <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/jobs" element={<JobList />} />
@@ -161,6 +166,17 @@ function App() {
               } 
             />
             <Route 
+              path="/employer/applications/:jobId" 
+              element={
+                <ProtectedRoute allowedRoles={['employer']}>
+                  <RolePageLayout>
+                    <EmployerApplications />
+                  </RolePageLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
               path="/employer/payments" 
               element={
                 <ProtectedRoute allowedRoles={['employer']}>
@@ -197,6 +213,8 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </main>
+          <Footer />
         </div>
       </Router>
       </AuthProvider>

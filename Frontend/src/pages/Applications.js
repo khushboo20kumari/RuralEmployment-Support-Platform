@@ -19,20 +19,32 @@ const Applications = () => {
       const response = await applicationAPI.getMyApplications();
       setApplications(response.data.applications);
     } catch (error) {
-      toast.error('अर्ज़ियाँ लाने में दिक्कत हुई');
+      toast.error('Failed to load applications');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = async (applicationId) => {
-    if (window.confirm('क्या आप यह अर्ज़ी रद्द करना चाहते हैं?')) {
+    if (window.confirm('Are you sure you want to cancel this application?')) {
       try {
         await applicationAPI.cancel(applicationId);
-        toast.success('अर्ज़ी रद्द हो गई');
+        toast.success('Application cancelled');
         fetchApplications();
       } catch (error) {
-        toast.error('अर्ज़ी रद्द करने में दिक्कत हुई');
+        toast.error('Failed to cancel application');
+      }
+    }
+  };
+
+  const handleMarkCompleted = async (applicationId) => {
+    if (window.confirm('Have you completed this job? The employer can then release your final payment.')) {
+      try {
+        await applicationAPI.markAsCompleted(applicationId);
+        toast.success('✅ Job marked complete! Employer has been notified.');
+        fetchApplications();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to mark job complete');
       }
     }
   };
@@ -67,7 +79,10 @@ const Applications = () => {
         </Card>
       ) : (
         <Row>
-          {applications.map((app) => (
+          {applications.map((app) => {
+            const normalizedStatus = (app.status || '').toLowerCase();
+
+            return (
             <Col xs={12} key={app._id} className="mb-3">
               <Card className="shadow-sm border-0 rounded-4 overflow-hidden">
                 <Card.Body className="p-3 p-md-4">
@@ -86,21 +101,24 @@ const Applications = () => {
                       <div className="mb-2">
                         <Badge 
                           bg={
-                            app.status === 'accepted' ? 'success' :
-                            app.status === 'rejected' ? 'danger' :
-                            app.status === 'applied' ? 'primary' : 
-                            app.status === 'completed' ? 'info' : 'secondary'
+                            normalizedStatus === 'accepted' ? 'success' :
+                            normalizedStatus === 'rejected' ? 'danger' :
+                            normalizedStatus === 'applied' ? 'primary' : 
+                            normalizedStatus === 'shortlisted' ? 'warning' :
+                            normalizedStatus === 'completed' ? 'info' : 'secondary'
                           }
                           className="me-2 px-3 py-2"
                           style={{ fontSize: '0.9rem' }}
                         >
-                          {app.status === 'accepted'
+                          {normalizedStatus === 'accepted'
                             ? '✅ Accepted'
-                            : app.status === 'rejected'
+                            : normalizedStatus === 'rejected'
                             ? '❌ Rejected'
-                            : app.status === 'applied'
+                            : normalizedStatus === 'applied'
                             ? '📤 Applied'
-                            : app.status === 'completed'
+                            : normalizedStatus === 'shortlisted'
+                            ? '📝 Shortlisted'
+                            : normalizedStatus === 'completed'
                             ? '✔️ Completed'
                             : '⏳ Processing'}
                         </Badge>
@@ -116,6 +134,16 @@ const Applications = () => {
                         <p className="mb-1">
                           <strong>📅 Applied:</strong> {new Date(app.applicationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
+                        {normalizedStatus === 'accepted' && (
+                          <p className="mb-1">
+                            <strong>🚀 Work Started:</strong> {app.workStarted ? 'Yes' : 'Not started yet by employer'}
+                          </p>
+                        )}
+                        {normalizedStatus === 'accepted' && (
+                          <p className="mb-1">
+                            <strong>📍 Attendance Marked:</strong> {app.attendanceCount || 0} day(s)
+                          </p>
+                        )}
                       </div>
 
                       {app.appliedMessage && (
@@ -133,21 +161,34 @@ const Applications = () => {
                     </Col>
                     
                     <Col xs={12} lg={4} className="text-lg-end">
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        className="rounded-3 w-100 w-lg-auto"
-                        onClick={() => handleCancel(app._id)}
-                        disabled={app.status !== 'applied'}
-                      >
-                        ❌ Cancel
-                      </Button>
+                      <div className="d-grid gap-2">
+                        {normalizedStatus === 'accepted' && (
+                          <Button 
+                            variant="success" 
+                            size="sm"
+                            className="rounded-3"
+                            onClick={() => handleMarkCompleted(app._id)}
+                          >
+                            ✅ काम पूरा हुआ (Mark Completed)
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm"
+                          className="rounded-3"
+                          onClick={() => handleCancel(app._id)}
+                          disabled={!['applied', 'shortlisted'].includes(normalizedStatus)}
+                        >
+                          ❌ Cancel
+                        </Button>
+                      </div>
                     </Col>
                   </Row>
                 </Card.Body>
               </Card>
             </Col>
-          ))}
+            );
+          })}
         </Row>
       )}
     </Container>

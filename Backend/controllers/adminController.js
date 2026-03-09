@@ -28,7 +28,19 @@ exports.getDashboardStats = async (req, res) => {
 
     const platformRevenue = await Payment.aggregate([
       { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$platformCommission' } } },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $add: [
+                { $ifNull: ['$platformFee', 0] },
+                { $ifNull: ['$platformCommission', 0] },
+              ],
+            },
+          },
+        },
+      },
     ]);
 
     res.status(200).json({

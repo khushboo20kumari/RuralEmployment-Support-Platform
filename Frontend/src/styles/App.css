@@ -5,7 +5,7 @@
   --success-color: #10B981;
   --warning-color: #F59E0B;
   --danger-color: #EF4444;
-  --light-bg: #F0F4FF;
+  --light-bg: #FFFFFF;
   --border-radius: 12px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.12);
@@ -136,8 +136,8 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   color: #1F2937;
-  background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 50%, #FFFFFF 100%);
-  background-size: 400% 400%;
+  background: #FFFFFF;
+  background-size: auto;
   background-attachment: fixed;
   line-height: 1.6;
   min-height: 100vh;
@@ -151,13 +151,14 @@ body {
 
 /* ===================== HERO SECTION ===================== */
 .hero-section {
-  background: linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 50%, #2A3F7F 100%);
-  color: white;
+  background: #FFFFFF;
+  color: #1F2937;
   padding: 80px 0;
   text-align: left;
   position: relative;
   overflow: hidden;
   animation: fadeInUp 0.8s ease-out;
+  border-bottom: 1px solid #E5E7EB;
 }
 
 .hero-section::before {
@@ -167,7 +168,7 @@ body {
   right: -5%;
   width: 600px;
   height: 600px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   animation: float 6s ease-in-out infinite;
 }
@@ -179,7 +180,7 @@ body {
   left: -10%;
   width: 400px;
   height: 400px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 50%;
   animation: float 8s ease-in-out infinite reverse;
 }
@@ -189,7 +190,7 @@ body {
   font-weight: 800;
   margin-bottom: 1.5rem;
   line-height: 1.1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  text-shadow: none;
   letter-spacing: -0.5px;
   animation: slideInLeft 0.8s ease-out 0.2s both;
 }
@@ -198,13 +199,13 @@ body {
   font-size: 1.3rem;
   margin-bottom: 1.5rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: #4B5563;
 }
 
 .hero-description {
   font-size: 1.1rem;
   margin-bottom: 2.5rem;
-  color: rgba(255, 255, 255, 0.90);
+  color: #6B7280;
   line-height: 1.7;
   max-width: 500px;
 }
@@ -436,22 +437,34 @@ body {
 
 /* ===================== FOOTER ===================== */
 .footer {
-  background-color: #2f3b2f;
-  color: white;
+  background-color: #1F2937;
+  color: #F9FAFB;
   margin-top: auto;
-  border-top: 1px solid #465846;
-  padding: 40px 0 20px;
+  border-top: 1px solid #374151;
+  padding: 28px 0 18px;
 }
 
 .footer h5 {
   font-weight: 700;
   margin-bottom: 0.75rem;
+  color: #FFFFFF;
 }
 
 .footer p {
-  color: rgba(255, 255, 255, 0.7);
+  color: #D1D5DB;
   margin-bottom: 0;
   font-size: 0.9rem;
+}
+
+.footer-link {
+  color: #E5E7EB;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.footer-link:hover {
+  color: #FFFFFF;
+  text-decoration: underline;
 }
 
 /* ===================== NAVBAR ===================== */
@@ -460,7 +473,8 @@ body {
 }
 
 .navbar-custom {
-  background: linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%) !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E5E7EB;
 }
 
 .navbar-brand {
@@ -472,12 +486,12 @@ body {
 .nav-link {
   font-weight: 500;
   transition: var(--transition);
-  color: white !important;
+  color: #111827 !important;
 }
 
 .nav-link:hover {
-  color: #FFFFFF !important;
-  opacity: 0.8;
+  color: #000000 !important;
+  opacity: 1;
 }
 
 /* ===================== FORMS & INPUTS ===================== */

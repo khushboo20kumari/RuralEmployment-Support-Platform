@@ -50,6 +50,8 @@ export const applicationAPI = {
   updateStatus: (applicationId, data) => axios.put(`${API_URL}/applications/${applicationId}/status`, data, { headers: getAuthHeader() }),
   markAsCompleted: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/complete`, {}, { headers: getAuthHeader() }),
   markAttendance: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/attendance`, {}, { headers: getAuthHeader() }),
+  startWork: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/start-work`, {}, { headers: getAuthHeader() }),
+  employerComplete: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/employer-complete`, {}, { headers: getAuthHeader() }),
   accept: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/accept`, {}, { headers: getAuthHeader() }),
   reject: (applicationId) => axios.put(`${API_URL}/applications/${applicationId}/reject`, {}, { headers: getAuthHeader() }),
   cancel: (applicationId) => axios.delete(`${API_URL}/applications/${applicationId}/cancel`, { headers: getAuthHeader() }),
@@ -63,6 +65,10 @@ export const paymentAPI = {
   getWorkerPayments: (params) => axios.get(`${API_URL}/payments/worker/earnings`, { headers: getAuthHeader(), params }),
   getEmployerPayments: (params) => axios.get(`${API_URL}/payments/my-payments/list`, { headers: getAuthHeader(), params }),
   getDetails: (paymentId) => axios.get(`${API_URL}/payments/${paymentId}/details`, { headers: getAuthHeader() }),
+  adminReleaseToWorker: (paymentId) => axios.put(`${API_URL}/payments/admin/${paymentId}/release-to-worker`, {}, { headers: getAuthHeader() }),
+  // Razorpay Integration
+  createRazorpayOrder: (data) => axios.post(`${API_URL}/payments/razorpay/create-order`, data, { headers: getAuthHeader() }),
+  verifyRazorpayPayment: (data) => axios.post(`${API_URL}/payments/razorpay/verify-payment`, data, { headers: getAuthHeader() }),
 };
 
 // Review API

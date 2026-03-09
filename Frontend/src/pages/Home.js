@@ -45,7 +45,7 @@ const Home = () => {
                 <Button as={Link} to="/jobs" variant="light" size="lg" className="hero-btn fw-bold">
                   {t('home.browseJobs')}
                 </Button>
-                <Button as={Link} to="/register" variant="outline-light" size="lg" className="hero-btn fw-bold">
+                <Button as={Link} to="/register" variant="warning" size="lg" className="hero-btn fw-bold">
                   {t('home.registerNow')}
                 </Button>
               </div>

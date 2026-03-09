@@ -21,7 +21,7 @@ const Navbar = () => {
     : '/admin/dashboard';
 
   return (
-    <BSNavbar bg="dark" variant="dark" expand="lg" sticky="top" className="navbar-custom">
+    <BSNavbar bg="light" variant="light" expand="lg" sticky="top" className="navbar-custom">
       <Container>
         <BSNavbar.Brand as={Link} to="/" className="fw-bold">
           🌾 Rural Employment Platform
@@ -32,11 +32,14 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/" className="nav-link-item">
               🏠 Home
             </Nav.Link>
+            <Nav.Link as={Link} to="/about" className="nav-link-item">
+              ℹ️ About
+            </Nav.Link>
             
             {/* Language Toggle */}
             <div className="nav-link-item">
               <Button 
-                variant="outline-info" 
+                variant="outline-dark" 
                 onClick={handleLanguageToggle}
                 size="sm"
                 className="fw-bold"
@@ -60,7 +63,7 @@ const Navbar = () => {
                 
                 <div className="nav-link-item">
                   <Button 
-                    variant="outline-danger" 
+                    variant="outline-dark" 
                     onClick={logout} 
                     size="sm"
                     className="fw-bold"
@@ -78,7 +81,7 @@ const Navbar = () => {
                   <Button 
                     as={Link} 
                     to="/register" 
-                    variant="primary" 
+                    variant="dark" 
                     size="sm"
                     className="fw-bold"
                   >

@@ -18,11 +18,11 @@ exports.postJob = async (req, res) => {
     let translatedDescriptionHi = descriptionHi;
 
     if (!translatedTitleHi) {
-      translatedTitleHi = translateDescription(title, 'hi');
+      translatedTitleHi = await translateDescription(title, 'hi');
     }
 
     if (!translatedDescriptionHi && description) {
-      translatedDescriptionHi = translateDescription(description, 'hi');
+      translatedDescriptionHi = await translateDescription(description, 'hi');
     }
 
     const job = await Job.create({
@@ -50,6 +50,9 @@ exports.postJob = async (req, res) => {
       job,
     });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Invalid job data', error: error.message });
+    }
     res.status(500).json({ message: 'Error posting job', error: error.message });
   }
 };
