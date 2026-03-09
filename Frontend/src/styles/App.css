@@ -126,6 +126,216 @@
   }
 }
 
+/* ===================== DASHBOARD HOVER EFFECTS ===================== */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card.hover-lift:hover {
+  border-color: rgba(91, 141, 238, 0.3);
+}
+
+/* Animated gradient backgrounds */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-flow {
+  background-size: 200% 200%;
+  animation: gradientFlow 15s ease infinite;
+}
+
+/* Interactive button hover effects */
+button, .btn {
+  transition: all 0.3s ease;
+}
+
+button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Card shine effect */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.card:hover::before {
+  opacity: 1;
+  left: 100%;
+  top: 100%;
+}
+
+/* Stat number count-up effect */
+.stat-number {
+  display: inline-block;
+  animation: scaleIn 0.5s ease-out;
+}
+
+/* Badge pulse effect */
+.badge {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.badge:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Progress bar glow */
+.progress {
+  overflow: visible;
+  background-color: rgba(91, 141, 238, 0.1);
+  border-radius: 10px;
+}
+
+.progress-bar {
+  box-shadow: 0 0 10px currentColor;
+  transition: width 1s ease-in-out;
+}
+
+/* Icon bounce on hover */
+.fs-1, .fs-2, .fs-3, .fs-4 {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .fs-1,
+.card:hover .fs-2,
+.card:hover .fs-3,
+.card:hover .fs-4 {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Smooth card entry */
+.card {
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Table row hover effect */
+tr {
+  transition: all 0.2s ease;
+}
+
+tr:hover {
+  background-color: rgba(91, 141, 238, 0.05);
+  transform: scale(1.01);
+}
+
+/* ===================== POST JOB PAGE (NO SHADOW) ===================== */
+.post-job-page .post-job-card {
+  animation: fadeInUp 0.35s ease-out;
+}
+
+.post-job-page .card,
+.post-job-page .btn,
+.post-job-page .form-control,
+.post-job-page .form-select {
+  box-shadow: none !important;
+}
+
+.post-job-page .btn:hover:not(:disabled),
+.post-job-page .btn:focus,
+.post-job-page .form-control:focus,
+.post-job-page .form-select:focus {
+  box-shadow: none !important;
+}
+
+.post-job-page .form-control,
+.post-job-page .form-select {
+  border: 1px solid #d6deea;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.post-job-page .form-control:hover,
+.post-job-page .form-select:hover {
+  border-color: #9db7ef;
+}
+
+.post-job-page .form-control:focus,
+.post-job-page .form-select:focus {
+  border-color: #5b8dee;
+}
+
+.post-job-page .post-job-submit-btn {
+  background: linear-gradient(135deg, #5b8dee 0%, #3d5bba 100%);
+  border: 1px solid #3d5bba;
+}
+
+/* ===================== AVAILABLE JOBS PAGE (NO SHADOW) ===================== */
+.job-list-page .card,
+.job-list-page .btn,
+.job-list-page .form-control,
+.job-list-page .form-select {
+  box-shadow: none !important;
+}
+
+.job-list-page .btn:hover:not(:disabled),
+.job-list-page .btn:focus,
+.job-list-page .form-control:focus,
+.job-list-page .form-select:focus {
+  box-shadow: none !important;
+}
+
+.job-list-page .form-control,
+.job-list-page .form-select {
+  border: 1px solid #d6deea;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.job-list-page .form-control:hover,
+.job-list-page .form-select:hover {
+  border-color: #9db7ef;
+}
+
+.job-list-page .form-control:focus,
+.job-list-page .form-select:focus {
+  border-color: #5b8dee;
+}
+
+.job-list-page .job-list-item {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.job-list-page .job-list-item:hover {
+  transform: translateY(-2px);
+  border-color: #8fb0f3 !important;
+}
+
 /* ===================== BASE STYLES ===================== */
 * {
   margin: 0;
@@ -168,7 +378,7 @@ body {
   right: -5%;
   width: 600px;
   height: 600px;
-  background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   animation: float 6s ease-in-out infinite;
 }
@@ -180,7 +390,7 @@ body {
   left: -10%;
   width: 400px;
   height: 400px;
-  background: rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.06);
   border-radius: 50%;
   animation: float 8s ease-in-out infinite reverse;
 }
@@ -301,7 +511,7 @@ body {
 
 /* ===================== HOW IT WORKS ===================== */
 .how-it-works-bg {
-  background: linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%);
+  background: linear-gradient(135deg, #7DD3FC 0%, #38BDF8 100%);
   padding: 80px 0;
 }
 
@@ -417,7 +627,7 @@ body {
 
 /* ===================== CTA SECTION ===================== */
 .cta-section {
-  background: linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%);
+  background: linear-gradient(135deg, #7DD3FC 0%, #38BDF8 100%);
   color: white;
   text-align: center;
   padding: 80px 0;
@@ -552,10 +762,10 @@ body {
   position: absolute;
   width: 12px;
   height: 12px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+  background: radial-gradient(circle at 30% 30%, rgba(135, 206, 250, 0.9), rgba(135, 206, 250, 0.4));
   border-radius: 50%;
   opacity: 0.8;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 8px rgba(135, 206, 250, 0.7);
   animation: rainDrop 6s linear infinite;
 }
 

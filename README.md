@@ -228,15 +228,52 @@ The platform generates revenue through:
 
 ## 🚀 Deployment
 
-### Backend Deployment (e.g., Heroku, Railway, Render)
-1. Set environment variables
-2. Connect MongoDB Atlas
-3. Deploy from repository
+### 1) MongoDB Atlas Setup
+1. Create a MongoDB Atlas cluster.
+2. Create DB user and password.
+3. In Network Access, allow your hosting provider IPs (or `0.0.0.0/0` for quick setup).
+4. Copy connection string as `MONGODB_URI`.
 
-### Frontend Deployment (e.g., Vercel, Netlify)
-1. Update API URL in environment
-2. Build production bundle
-3. Deploy from repository
+### 2) Backend Deployment (Render)
+This repository includes [render.yaml](render.yaml) for quick setup.
+
+1. Push project to GitHub.
+2. In Render, create service from repository (Blueprint or manual Web Service).
+3. Use `Backend` as root directory.
+4. Build command: `npm install`
+5. Start command: `npm start`
+6. Configure environment variables:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `JWT_EXPIRE=7d`
+   - `FRONTEND_URL` (your Vercel frontend URL)
+   - `NODE_ENV=production`
+   - `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` (if using payments)
+7. Deploy and copy backend URL (example: `https://your-backend.onrender.com`).
+
+### 3) Frontend Deployment (Vercel)
+This repository includes [Frontend/vercel.json](Frontend/vercel.json) for SPA route support.
+
+1. Import repository in Vercel.
+2. Set Root Directory to `Frontend`.
+3. Framework preset: Create React App.
+4. Add environment variables:
+   - `REACT_APP_API_URL=https://your-backend.onrender.com/api`
+   - `REACT_APP_RAZORPAY_KEY_ID` (if using payments)
+5. Deploy.
+
+### 4) Final CORS + API check
+1. Update backend `FRONTEND_URL` with deployed Vercel URL.
+2. Redeploy backend.
+3. Test:
+   - Register/Login
+   - Post Job
+   - Browse Jobs
+   - Payments (if enabled)
+
+### Environment Templates
+- Backend template: [Backend/.env.example](Backend/.env.example)
+- Frontend template: [Frontend/.env.example](Frontend/.env.example)
 
 ## 📱 User Flow
 

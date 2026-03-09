@@ -70,15 +70,23 @@ const PostJob = () => {
   };
 
   return (
-    <Container className="my-3 my-md-5 py-2">
+    <Container className="my-3 my-md-5 py-2 post-job-page">
       <Row className="justify-content-center">
         <Col xs={12} lg={10}>
-          <Card className="shadow-lg border-0 rounded-4">
+          <Card className="border rounded-4 post-job-card" style={{ borderColor: '#dbe3f1' }}>
             <Card.Body className="p-3 p-md-4">
-              <div className="text-center mb-4">
-                <div className="mb-2" style={{ fontSize: '2.5rem' }}>➕</div>
-                <h2 className="fw-bold mb-2">Post a New Job</h2>
-                <p className="text-muted">Fill details carefully for best candidates</p>
+              <div className="mb-4 rounded-4 p-3 p-md-4" style={{ background: 'linear-gradient(135deg, #eef4ff 0%, #f8fbff 100%)', border: '1px solid #d9e7ff' }}>
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                  <div>
+                    <div className="mb-1" style={{ fontSize: '2rem' }}>🧾</div>
+                    <h2 className="fw-bold mb-1">Post a New Job</h2>
+                    <p className="text-muted mb-0">Create a clear job post to attract better workers faster.</p>
+                  </div>
+                  <div className="d-flex gap-2 flex-wrap">
+                    <span className="badge bg-primary-subtle text-primary border">Professional</span>
+                    <span className="badge bg-success-subtle text-success border">Fast Hiring</span>
+                  </div>
+                </div>
               </div>
 
               <Form onSubmit={handleSubmit}>
@@ -119,7 +127,7 @@ const PostJob = () => {
                   </Form.Select>
                 </Form.Group>
 
-                <div className="bg-light rounded-3 p-3 mb-3">
+                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
                   <h5 className="mb-3 fw-semibold">📍 Location</h5>
                   <Row>
                     <Col xs={12} sm={4}>
@@ -166,7 +174,7 @@ const PostJob = () => {
                   </Row>
                 </div>
 
-                <div className="bg-light rounded-3 p-3 mb-3">
+                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
                   <h5 className="mb-3 fw-semibold">💰 Salary</h5>
                   <Row>
                     <Col xs={12} sm={6}>
@@ -226,7 +234,7 @@ const PostJob = () => {
                   </Col>
                 </Row>
 
-                <div className="bg-light rounded-3 p-3 mb-3">
+                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
                   <h5 className="mb-3 fw-semibold">⏰ Working Hours</h5>
                   <Row>
                     <Col xs={12} sm={6}>
@@ -256,7 +264,7 @@ const PostJob = () => {
                   </Row>
                 </div>
 
-                <div className="bg-light rounded-3 p-3 mb-4">
+                <div className="rounded-3 p-3 mb-4" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
                   <h5 className="mb-3 fw-semibold">✨ Benefits</h5>
                   <Form.Group className="mb-2">
                     <Form.Check
@@ -280,7 +288,7 @@ const PostJob = () => {
                   </Form.Group>
                 </div>
 
-                <Button variant="primary" type="submit" className="w-100 py-3 fw-bold rounded-3" size="lg" disabled={loading}>
+                <Button variant="primary" type="submit" className="w-100 py-3 fw-bold rounded-3 post-job-submit-btn" size="lg" disabled={loading}>
                   {loading ? '⏳ Posting...' : '✅ Post Job Now'}
                 </Button>
               </Form>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Form } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useLanguage } from '../hooks/useLanguage';
@@ -22,11 +22,7 @@ const AdminDashboard = () => {
     Authorization: `Bearer ${localStorage.getItem('token')}`,
   });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [statsRes, usersRes, workersRes, employersRes, jobsRes, appsRes, paymentsRes] = await Promise.all([
         axios.get(`${API_URL}/admin/stats`, { headers: getAuthHeader() }),
@@ -50,7 +46,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleVerifyUser = async (userId, isVerified) => {
     try {
@@ -115,44 +115,95 @@ const AdminDashboard = () => {
 
   return (
     <Container className="my-4 my-md-5">
-      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
+      {/* Hero Card with Dark Gradient */}
+      <Card className="border-0 shadow-lg rounded-4 mb-4 overflow-hidden" style={{
+        background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+        animation: 'fadeInUp 0.5s ease-out'
+      }}>
         <Card.Body className="p-4">
-          <h2 className="mb-1">🔐 {t('admin.title')}</h2>
-          <p className="mb-0 text-white-50">Monitor users, jobs, applications, and payments from one place.</p>
+          <Row className="align-items-center">
+            <Col md={8}>
+              <div className="d-flex align-items-center">
+                <div className="fs-1 me-3">🔐</div>
+                <div>
+                  <h2 className="mb-1 text-white fw-bold">{t('admin.title')}</h2>
+                  <p className="mb-0 text-white-50">Monitor users, jobs, applications, and payments from one place.</p>
+                </div>
+              </div>
+            </Col>
+            <Col md={4} className="text-md-end">
+              <div className="text-white">
+                <h4 className="mb-0">₹{stats.platformRevenue || 0}</h4>
+                <small className="text-white-50">Platform Revenue</small>
+              </div>
+            </Col>
+          </Row>
         </Card.Body>
       </Card>
 
-      {/* Stats Cards */}
-      <Row className="g-3 mb-4">
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body>
+      {/* Stats Cards with Gradient Backgrounds */}
+      <Row className="g-4 mb-4">
+        <Col md={3} sm={6}>
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)'
+          }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="fs-2">👥</div>
+                <Badge bg="primary" className="rounded-pill">Users</Badge>
+              </div>
+              <h3 className="fw-bold text-primary mb-1">{stats.totalUsers}</h3>
               <div className="text-muted small">{t('admin.totalUsers')}</div>
-              <h3 className="mb-0">{stats.totalUsers}</h3>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body>
+        <Col md={3} sm={6}>
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+          }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="fs-2">💼</div>
+                <Badge bg="success" className="rounded-pill">Jobs</Badge>
+              </div>
+              <h3 className="fw-bold text-success mb-1">{stats.totalJobs}</h3>
               <div className="text-muted small">{t('admin.totalJobs')}</div>
-              <h3 className="mb-0">{stats.totalJobs}</h3>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body>
+        <Col md={3} sm={6}>
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
+          }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="fs-2">⏳</div>
+                <Badge bg="warning" text="dark" className="rounded-pill">Pending</Badge>
+              </div>
+              <h3 className="fw-bold text-warning mb-1">{stats.pendingJobs || 0}</h3>
               <div className="text-muted small">{t('admin.pendingJobs')}</div>
-              <h3 className="mb-0">{stats.pendingJobs || 0}</h3>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body>
+        <Col md={3} sm={6}>
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
+          }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="fs-2">💰</div>
+                <Badge bg="danger" className="rounded-pill">Revenue</Badge>
+              </div>
+              <h3 className="fw-bold text-danger mb-1">₹{stats.platformRevenue || 0}</h3>
               <div className="text-muted small">{t('admin.platformRevenue')}</div>
-              <h3 className="mb-0">₹{stats.platformRevenue || 0}</h3>
             </Card.Body>
           </Card>
         </Col>

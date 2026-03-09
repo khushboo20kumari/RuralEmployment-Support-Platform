@@ -117,38 +117,61 @@ const WorkerDashboard = () => {
           type: 'Worker',
         }}
       >
-      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-success text-white">
+      {/* Hero Card with Gradient */}
+      <Card className="border-0 rounded-4 mb-4 overflow-hidden" style={{
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        animation: 'fadeInUp 0.5s ease-out'
+      }}>
         <Card.Body className="p-4">
-          <h2 className="mb-1">👷 Worker Dashboard</h2>
-          <p className="mb-0 text-white-50">Track applications, mark work complete, and monitor earnings.</p>
+          <Row className="align-items-center">
+            <Col md={8}>
+              <div className="d-flex align-items-center mb-2">
+                <div className="fs-1 me-3">👷</div>
+                <div>
+                  <h2 className="mb-1 text-white fw-bold">Welcome, {user?.name}!</h2>
+                  <p className="mb-0 text-white-50">Track applications, mark work complete, and monitor earnings.</p>
+                </div>
+              </div>
+            </Col>
+            <Col md={4} className="text-md-end">
+              <div className="text-white">
+                <h4 className="mb-0">₹{stats.totalEarnings.toLocaleString()}</h4>
+                <small className="text-white-50">Total Earnings</small>
+              </div>
+            </Col>
+          </Row>
         </Card.Body>
       </Card>
 
-      <SimpleBarChart
-        title="Your Work Summary"
-        data={[
-          { label: 'Pending', value: stats.activeApplications, color: '#f59e0b' },
-          { label: 'Accepted', value: stats.acceptedApplications, color: '#0ea5e9' },
-          { label: 'Completed', value: stats.completedJobs, color: '#10b981' },
-          { label: 'Earnings (₹1000)', value: Math.round(stats.totalEarnings / 1000), color: '#6366f1' },
-        ]}
-      />
-
       {/* Profile Completion Alert */}
       {profileCompletion < 100 && (
-        <Card className="mb-4 border-0 shadow-sm rounded-4 bg-light border-info">
-          <Card.Body>
+        <Card className="mb-4 border-0 rounded-4 bg-gradient" style={{
+          background: 'linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%)',
+          border: '2px solid #fecaca',
+          animation: 'pulse 2s infinite'
+        }}>
+          <Card.Body className="p-4">
             <Row className="align-items-center">
               <Col md={8}>
-                <h6 className="mb-2">📝 अपनी प्रोफाइल पूरी करें</h6>
-                <p className="mb-2 small text-muted">
-                  पूरी प्रोफाइल होने पर काम मिलने के मौके बढ़ते हैं। आपकी प्रोफाइल {profileCompletion}% पूरी है।
-                </p>
-                <ProgressBar now={profileCompletion} className="mb-2" />
+                <div className="d-flex align-items-start">
+                  <span className="fs-3 me-3">⚠️</span>
+                  <div className="flex-grow-1">
+                    <h6 className="mb-2 fw-bold text-danger">📝 अपनी प्रोफाइल पूरी करें</h6>
+                    <p className="mb-2 small text-muted">
+                      पूरी प्रोफाइल होने पर काम मिलने के मौके बढ़ते हैं। आपकी प्रोफाइल {profileCompletion}% पूरी है।
+                    </p>
+                    <ProgressBar 
+                      now={profileCompletion} 
+                      className="mb-0" 
+                      style={{height: '8px'}}
+                      variant="success"
+                    />
+                  </div>
+                </div>
               </Col>
               <Col md={4} className="text-md-end">
-                <Button as={Link} to="/profile" variant="primary" size="sm">
-                  प्रोफाइल पूरी करें
+                <Button as={Link} to="/profile" variant="danger">
+                  <span className="fw-bold">प्रोफाइल पूरी करें</span>
                 </Button>
               </Col>
             </Row>
@@ -156,206 +179,358 @@ const WorkerDashboard = () => {
         </Card>
       )}
 
-      {/* Stats Cards */}
-      <Row className="g-3 mb-4">
-        <Col md={3} className="mb-3">
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h4 className="text-warning">{stats.activeApplications}</h4>
-              <p className="text-muted small mb-0">लंबित अर्ज़ियाँ</p>
+      {/* Stats Cards with Hover Effects */}
+      <Row className="g-4 mb-4">
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">⏳</div>
+              <h3 className="text-warning fw-bold mb-2">{stats.activeApplications}</h3>
+              <p className="text-dark fw-semibold small mb-1">लंबित अर्ज़ियाँ</p>
               <small className="text-muted">जवाब का इंतज़ार</small>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} className="mb-3">
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h4 className="text-info">{stats.acceptedApplications}</h4>
-              <p className="text-muted small mb-0">स्वीकृत</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">✅</div>
+              <h3 className="text-info fw-bold mb-2">{stats.acceptedApplications}</h3>
+              <p className="text-dark fw-semibold small mb-1">स्वीकृत</p>
               <small className="text-muted">काम के लिए तैयार</small>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} className="mb-3">
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h4 className="text-success">{stats.completedJobs}</h4>
-              <p className="text-muted small mb-0">पूरा हुआ काम</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">🎯</div>
+              <h3 className="text-success fw-bold mb-2">{stats.completedJobs}</h3>
+              <p className="text-dark fw-semibold small mb-1">पूरा हुआ काम</p>
               <small className="text-muted">भरोसा बढ़ाएं</small>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} className="mb-3">
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h4 className="text-primary">₹{stats.totalEarnings.toLocaleString()}</h4>
-              <p className="text-muted small mb-0">कुल कमाई</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">💰</div>
+              <h3 className="text-primary fw-bold mb-2">₹{stats.totalEarnings.toLocaleString()}</h3>
+              <p className="text-dark fw-semibold small mb-1">कुल कमाई</p>
               <small className="text-muted">पूरा भुगतान</small>
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Quick Actions */}
-      <Row className="mb-4">
-        <Col md={12}>
-          <Card className="border-0 shadow-sm rounded-4">
-            <Card.Body>
-              <Row>
-                <Col md={3} className="mb-2">
-                  <Button as={Link} to="/jobs" variant="primary" className="w-100">
-                    🔍 काम देखें
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button as={Link} to="/worker/applications" variant="info" className="w-100">
-                    📋 अर्ज़ियाँ देखें
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button as={Link} to="/worker/payments" variant="success" className="w-100">
-                    💳 भुगतान देखें
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button as={Link} to="/profile" variant="secondary" className="w-100">
-                    👤 प्रोफाइल बदलें
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      {/* Chart Section */}
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <SimpleBarChart
+            title="📊 Your Work Summary"
+            data={[
+              { label: 'Pending', value: stats.activeApplications, color: '#f59e0b' },
+              { label: 'Accepted', value: stats.acceptedApplications, color: '#0ea5e9' },
+              { label: 'Completed', value: stats.completedJobs, color: '#10b981' },
+              { label: 'Earnings (₹1000)', value: Math.round(stats.totalEarnings / 1000), color: '#6366f1' },
+            ]}
+          />
+        </Card.Body>
+      </Card>
+
+      {/* Quick Actions with Beautiful Buttons */}
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <h5 className="mb-3 fw-bold text-dark">🚀 Quick Actions</h5>
+          <Row className="g-3">
+            <Col md={3} sm={6}>
+              <Button 
+                as={Link} 
+                to="/jobs" 
+                className="w-100 py-3" 
+                style={{
+                  background: 'linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%)',
+                  border: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div className="fs-4 mb-1">🔍</div>
+                <div className="fw-semibold">काम देखें</div>
+              </Button>
+            </Col>
+            <Col md={3} sm={6}>
+              <Button 
+                as={Link} 
+                to="/worker/applications" 
+                className="w-100 py-3" 
+                style={{
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                  border: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div className="fs-4 mb-1">📋</div>
+                <div className="fw-semibold">अर्ज़ियाँ देखें</div>
+              </Button>
+            </Col>
+            <Col md={3} sm={6}>
+              <Button 
+                as={Link} 
+                to="/worker/payments" 
+                className="w-100 py-3" 
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div className="fs-4 mb-1">💳</div>
+                <div className="fw-semibold">भुगतान देखें</div>
+              </Button>
+            </Col>
+            <Col md={3} sm={6}>
+              <Button 
+                as={Link} 
+                to="/profile" 
+                className="w-100 py-3" 
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                  border: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div className="fs-4 mb-1">👤</div>
+                <div className="fw-semibold">प्रोफाइल बदलें</div>
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
       {/* Applications Tabs */}
-      <Card className="border-0 shadow-sm rounded-4">
-        <Card.Header className="bg-light">
-          <h5 className="mb-0">📊 आपकी अर्ज़ियाँ</h5>
+      <Card className="border-0 rounded-4">
+        <Card.Header style={{
+          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+          borderBottom: '2px solid #e2e8f0'
+        }} className="p-4">
+          <h5 className="mb-0 fw-bold text-dark">📊 आपकी अर्ज़ियाँ</h5>
         </Card.Header>
-        <Card.Body>
-          <Tabs defaultActiveKey="applied" className="mb-3">
+        <Card.Body className="p-4">
+          <Tabs defaultActiveKey="applied" className="mb-4 nav-pills">
             <Tab eventKey="applied" title={`⏳ Applied (${stats.activeApplications})`}>
               {applications.filter((a) => ['applied', 'shortlisted'].includes(a.status)).length === 0 ? (
-                <p className="text-muted text-center py-4">कोई लंबित अर्ज़ी नहीं</p>
+                <div className="text-center py-5">
+                  <div className="fs-1 mb-3">📭</div>
+                  <p className="text-muted">कोई लंबित अर्ज़ी नहीं</p>
+                </div>
               ) : (
                 applications
                   .filter((a) => ['applied', 'shortlisted'].includes(a.status))
                   .map((app) => (
-                    <div key={app._id} className="border-bottom pb-3 mb-3">
-                      <Row>
-                        <Col md={8}>
-                          <h6>{app.jobId?.title}</h6>
-                          <p className="mb-1 small">
-                            <strong>कंपनी:</strong> {app.employerId?.companyName}
-                          </p>
-                          <p className="mb-1 small">
-                            <strong>जगह:</strong> {app.jobId?.location?.district}
-                          </p>
-                          <p className="small text-muted">
-                            अर्ज़ी की तारीख: {new Date(app.createdAt).toLocaleDateString()}
-                          </p>
-                        </Col>
-                        <Col md={4} className="text-end">
-                          <Badge bg="warning" className="mb-2">
-                            ⏳ जवाब का इंतज़ार
-                          </Badge>
-                          <br />
-                          <Button as={Link} to={`/jobs/${app.jobId?._id}`} variant="outline-primary" size="sm">
-                            काम देखें
-                          </Button>
-                        </Col>
-                      </Row>
-                    </div>
+                    <Card key={app._id} className="border rounded-3 mb-3 hover-lift" style={{
+                      transition: 'all 0.3s ease',
+                      borderLeft: '4px solid #f59e0b'
+                    }}>
+                      <Card.Body className="p-4">
+                        <Row>
+                          <Col md={8}>
+                            <div className="d-flex align-items-start mb-2">
+                              <div className="fs-4 me-3">💼</div>
+                              <div>
+                                <h6 className="fw-bold mb-2">{app.jobId?.title}</h6>
+                                <div className="mb-2">
+                                  <Badge bg={app.status === 'shortlisted' ? 'info' : 'warning'} className="px-3 py-2">
+                                    {app.status === 'shortlisted' ? '⭐ Shortlisted' : '⏳ Applied'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="small">
+                              <p className="mb-1">
+                                <span className="text-muted">🏢 कंपनी:</span>
+                                <span className="ms-2 fw-semibold">{app.employerId?.companyName}</span>
+                              </p>
+                              <p className="mb-1">
+                                <span className="text-muted">📍 जगह:</span>
+                                <span className="ms-2 fw-semibold">{app.jobId?.location?.district}</span>
+                              </p>
+                              <p className="mb-0">
+                                <span className="text-muted">📅 अर्जी दी:</span>
+                                <span className="ms-2 fw-semibold">{new Date(app.createdAt).toLocaleDateString('hi-IN')}</span>
+                              </p>
+                            </div>
+                          </Col>
+                          <Col md={4} className="text-md-end">
+                            <Button 
+                              as={Link} 
+                              to={`/jobs/${app.jobId?._id}`} 
+                              variant="outline-primary" 
+                              size="sm"
+                              className="w-100"
+                            >
+                              👁️ विवरण देखें
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
                   ))
               )}
             </Tab>
 
-            <Tab eventKey="accepted" title={`✓ स्वीकृत (${stats.acceptedApplications})`}>
+            <Tab eventKey="accepted" title={`✅ स्वीकृत (${stats.acceptedApplications})`}>
               {applications.filter((a) => a.status === 'accepted').length === 0 ? (
-                <p className="text-muted text-center py-4">कोई स्वीकृत अर्ज़ी नहीं</p>
+                <div className="text-center py-5">
+                  <div className="fs-1 mb-3">📭</div>
+                  <p className="text-muted">कोई स्वीकृत अर्ज़ी नहीं</p>
+                </div>
               ) : (
                 applications
                   .filter((a) => a.status === 'accepted')
                   .map((app) => (
-                    <div key={app._id} className="border-bottom pb-3 mb-3">
+                    <Card key={app._id} className="border rounded-3 mb-3 hover-lift" style={{
+                      transition: 'all 0.3s ease',
+                      borderLeft: '4px solid #0ea5e9'
+                    }}>
+                      <Card.Body className="p-4">
                       <Row>
                         <Col md={8}>
-                          <h6>{app.jobId?.title}</h6>
-                          <p className="mb-1 small">
-                            <strong>कंपनी:</strong> {app.employerId?.companyName}
-                          </p>
-                          <p className="mb-1 small">
-                            <strong>मजदूरी:</strong> ₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}
-                          </p>
-                          <p className="mb-1 small">
-                            <strong>Attendance Days:</strong> {app.attendanceCount || 0}
-                          </p>
-                          <p className="small text-muted">
-                            स्वीकृत तारीख: {new Date(app.acceptedDate || app.createdAt).toLocaleDateString()}
-                          </p>
+                          <div className="d-flex align-items-start mb-2">
+                            <div className="fs-4 me-3">🎯</div>
+                            <div>
+                              <h6 className="fw-bold mb-2">{app.jobId?.title}</h6>
+                              <div className="mb-2">
+                                <Badge bg="success" className="px-3 py-2">
+                                  ✅ स्वीकृत
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="small">
+                            <p className="mb-1">
+                              <span className="text-muted">🏢 कंपनी:</span>
+                              <span className="ms-2 fw-semibold">{app.employerId?.companyName}</span>
+                            </p>
+                            <p className="mb-1">
+                              <span className="text-muted">💰 मजदूरी:</span>
+                              <span className="ms-2 fw-semibold">₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}</span>
+                            </p>
+                            <p className="mb-1">
+                              <span className="text-muted">📊 Attendance Days:</span>
+                              <span className="ms-2 fw-semibold">{app.attendanceCount || 0}</span>
+                            </p>
+                            <p className="mb-0">
+                              <span className="text-muted">📅 स्वीकृत:</span>
+                              <span className="ms-2 fw-semibold">{new Date(app.acceptedDate || app.createdAt).toLocaleDateString('hi-IN')}</span>
+                            </p>
+                          </div>
                         </Col>
-                        <Col md={4} className="text-end">
-                          <Badge bg="success" className="mb-2">
-                            ✓ स्वीकृत
-                          </Badge>
-                          <br />
-                          <Button 
-                            as={Link} 
-                            to={`/jobs/${app.jobId?._id}`} 
-                            variant="outline-primary" 
-                            size="sm"
-                            className="me-2"
-                          >
-                            काम देखें
-                          </Button>
-                          <Button 
-                            variant="outline-success" 
-                            size="sm"
-                            onClick={() => handleMarkCompleted(app._id)}
-                            disabled={completingId === app._id}
-                          >
-                            {completingId === app._id ? '⏳ Processing...' : '✅ Mark Complete'}
-                          </Button>
+                        <Col md={4} className="text-md-end">
+                          <div className="d-flex flex-column gap-2">
+                            <Button 
+                              as={Link} 
+                              to={`/jobs/${app.jobId?._id}`} 
+                              variant="outline-primary" 
+                              size="sm"
+                              className="w-100"
+                            >
+                              👁️ विवरण देखें
+                            </Button>
+                            <Button 
+                              variant="success" 
+                              size="sm"
+                              onClick={() => handleMarkCompleted(app._id)}
+                              disabled={completingId === app._id}
+                              className="w-100"
+                              style={{
+                                background: completingId === app._id ? '#6c757d' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                border: 'none'
+                              }}
+                            >
+                              {completingId === app._id ? '⏳ Processing...' : '✅ Mark Complete'}
+                            </Button>
+                          </div>
                         </Col>
                       </Row>
-                    </div>
+                      </Card.Body>
+                    </Card>
                   ))
               )}
             </Tab>
 
-            <Tab eventKey="completed" title={`✅ पूरा (${stats.completedJobs})`}>
+            <Tab eventKey="completed" title={`🎯 पूरा (${stats.completedJobs})`}>
               {applications.filter((a) => a.status === 'completed').length === 0 ? (
-                <p className="text-muted text-center py-4">अभी कोई काम पूरा नहीं हुआ</p>
+                <div className="text-center py-5">
+                  <div className="fs-1 mb-3">📭</div>
+                  <p className="text-muted">अभी कोई काम पूरा नहीं हुआ</p>
+                </div>
               ) : (
                 applications
                   .filter((a) => a.status === 'completed')
                   .map((app) => (
-                    <div key={app._id} className="border-bottom pb-3 mb-3">
-                      <Row>
-                        <Col md={8}>
-                          <h6>{app.jobId?.title}</h6>
-                          <p className="mb-1 small">
-                            <strong>कंपनी:</strong> {app.employerId?.companyName}
-                          </p>
-                          <p className="mb-1 small">
-                            <strong>मजदूरी:</strong> ₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}
-                          </p>
-                          <p className="small text-muted">
-                            पूरा होने की तारीख: {new Date(app.completionDate || app.createdAt).toLocaleDateString()}
-                          </p>
-                        </Col>
-                        <Col md={4} className="text-end">
-                          <Badge bg="info" className="mb-2">
-                            ✅ पूरा हुआ
-                          </Badge>
-                          <br />
-                          <Button as={Link} to={`/jobs/${app.jobId?._id}`} variant="outline-primary" size="sm">
-                            काम देखें
-                          </Button>
-                        </Col>
-                      </Row>
-                    </div>
+                    <Card key={app._id} className="border rounded-3 mb-3 hover-lift" style={{
+                      transition: 'all 0.3s ease',
+                      borderLeft: '4px solid #10b981'
+                    }}>
+                      <Card.Body className="p-4">
+                        <Row>
+                          <Col md={8}>
+                            <div className="d-flex align-items-start mb-2">
+                              <div className="fs-4 me-3">🏆</div>
+                              <div>
+                                <h6 className="fw-bold mb-2">{app.jobId?.title}</h6>
+                                <div className="mb-2">
+                                  <Badge bg="info" className="px-3 py-2">
+                                    🎯 पूरा हुआ
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="small">
+                              <p className="mb-1">
+                                <span className="text-muted">🏢 कंपनी:</span>
+                                <span className="ms-2 fw-semibold">{app.employerId?.companyName}</span>
+                              </p>
+                              <p className="mb-1">
+                                <span className="text-muted">💰 मजदूरी:</span>
+                                <span className="ms-2 fw-semibold">₹{app.jobId?.salary?.amount} प्रति {app.jobId?.salary?.period}</span>
+                              </p>
+                              <p className="mb-0">
+                                <span className="text-muted">📅 पूरा होने की तारीख:</span>
+                                <span className="ms-2 fw-semibold">{new Date(app.completionDate || app.createdAt).toLocaleDateString('hi-IN')}</span>
+                              </p>
+                            </div>
+                          </Col>
+                          <Col md={4} className="text-md-end">
+                            <Button 
+                              as={Link} 
+                              to={`/jobs/${app.jobId?._id}`} 
+                              variant="outline-primary" 
+                              size="sm"
+                              className="w-100"
+                            >
+                              👁️ विवरण देखें
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
                   ))
               )}
             </Tab>
@@ -365,7 +540,7 @@ const WorkerDashboard = () => {
 
       {/* Profile Info Card */}
       {profile && (
-        <Card className="border-0 shadow-sm rounded-4 mt-4">
+        <Card className="border-0 rounded-4 mt-4">
           <Card.Header className="bg-light">
             <h5 className="mb-0">👤 आपकी प्रोफाइल</h5>
           </Card.Header>

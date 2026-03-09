@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { jobAPI, employerAPI } from '../services/api';
@@ -79,76 +79,133 @@ const EmployerDashboard = () => {
           type: 'Employer',
         }}
       >
-      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-primary text-white">
+      {/* Hero Card with Gradient */}
+      <Card className="border-0 rounded-4 mb-4 overflow-hidden" style={{
+        background: 'linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%)',
+        animation: 'fadeInUp 0.5s ease-out'
+      }}>
         <Card.Body className="p-4">
-          <h2 className="mb-1">🏢 Employer Dashboard</h2>
-          <p className="mb-0 text-white-50">Manage jobs, monitor approvals, and track workforce progress.</p>
+          <Row className="align-items-center">
+            <Col md={8}>
+              <div className="d-flex align-items-center">
+                <div className="fs-1 me-3">🏢</div>
+                <div>
+                  <h2 className="mb-1 text-white fw-bold">Employer Dashboard</h2>
+                  <p className="mb-0 text-white-50">Manage jobs, monitor approvals, and track workforce progress.</p>
+                </div>
+              </div>
+            </Col>
+            <Col md={4} className="text-md-end">
+              <Button 
+                as={Link} 
+                to="/employer/post-job" 
+                variant="light" 
+                className="fw-bold"
+                size="lg"
+              >
+                ➕ Post New Job
+              </Button>
+            </Col>
+          </Row>
         </Card.Body>
       </Card>
 
-      <SimpleBarChart
-        title="Job Status Chart"
-        data={[
-          { label: 'Total Jobs', value: stats.jobs, color: '#5B8DEE' },
-          { label: 'Active Jobs', value: stats.activeJobs, color: '#10b981' },
-          { label: 'Pending Approval', value: stats.pendingApproval, color: '#f59e0b' },
-          { label: 'Workers Hired', value: stats.workersHired, color: '#0ea5e9' },
-        ]}
-      />
-
-      {/* Stats Cards */}
-      <Row className="g-3 mb-4">
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h3 className="text-primary">{stats.jobs}</h3>
-              <p className="mb-0 small">Total Jobs Posted</p>
+      {/* Stats Cards with Interactive Hover */}
+      <Row className="g-4 mb-4">
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">📊</div>
+              <h3 className="text-primary fw-bold mb-2">{stats.jobs}</h3>
+              <p className="text-dark fw-semibold small mb-0">Total Jobs Posted</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h3 className="text-success">{stats.activeJobs}</h3>
-              <p className="mb-0 small">Active & Approved</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">✅</div>
+              <h3 className="text-success fw-bold mb-2">{stats.activeJobs}</h3>
+              <p className="text-dark fw-semibold small mb-0">Active & Approved</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h3 className="text-warning">{stats.pendingApproval}</h3>
-              <p className="mb-0 small">Pending Approval</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">⏳</div>
+              <h3 className="text-warning fw-bold mb-2">{stats.pendingApproval}</h3>
+              <p className="text-dark fw-semibold small mb-0">Pending Approval</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="text-center">
-              <h3 className="text-info">{stats.workersHired}</h3>
-              <p className="mb-0 small">Workers Hired</p>
+        <Col md={3} sm={6}>
+          <Card className="border-0 rounded-4 h-100 hover-lift" style={{
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+          }}>
+            <Card.Body className="text-center p-4">
+              <div className="fs-2 mb-3">👷</div>
+              <h3 className="text-info fw-bold mb-2">{stats.workersHired}</h3>
+              <p className="text-dark fw-semibold small mb-0">Workers Hired</p>
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
+      {/* Chart Section */}
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <SimpleBarChart
+            title="📈 Job Status Chart"
+            data={[
+              { label: 'Total Jobs', value: stats.jobs, color: '#5B8DEE' },
+              { label: 'Active Jobs', value: stats.activeJobs, color: '#10b981' },
+              { label: 'Pending Approval', value: stats.pendingApproval, color: '#f59e0b' },
+              { label: 'Workers Hired', value: stats.workersHired, color: '#0ea5e9' },
+            ]}
+          />
+        </Card.Body>
+      </Card>
+
       <Row>
         <Col md={12}>
-          <Card className="mb-4 border-0 shadow-sm rounded-4">
-            <Card.Body>
+          <Card className="mb-4 border-0 rounded-4">
+            <Card.Body className="p-4">
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5>📋 My Posted Jobs</h5>
-                <Button as={Link} to="/employer/post-job" variant="primary">
+                <h5 className="mb-0 fw-bold">📋 My Posted Jobs</h5>
+                <Button 
+                  as={Link} 
+                  to="/employer/post-job" 
+                  style={{
+                    background: 'linear-gradient(135deg, #5B8DEE 0%, #3D5BBA 100%)',
+                    border: 'none'
+                  }}
+                >
                   ➕ Post New Job
                 </Button>
               </div>
 
-              {/* Filter Tabs */}
-              <div className="mb-3 d-flex gap-2 flex-wrap">
+              {/* Filter Tabs with Modern Design */}
+              <div className="mb-4 d-flex gap-2 flex-wrap">
                 <Button 
                   variant={filter === 'all' ? 'primary' : 'outline-primary'} 
                   size="sm"
                   onClick={() => setFilter('all')}
+                  className="rounded-pill px-3"
                 >
                   All ({myJobs.length})
                 </Button>
@@ -156,6 +213,7 @@ const EmployerDashboard = () => {
                   variant={filter === 'approved' ? 'success' : 'outline-success'} 
                   size="sm"
                   onClick={() => setFilter('approved')}
+                  className="rounded-pill px-3"
                 >
                   ✓ Approved ({myJobs.filter(j => j.isApproved).length})
                 </Button>
@@ -163,6 +221,7 @@ const EmployerDashboard = () => {
                   variant={filter === 'pending' ? 'warning' : 'outline-warning'} 
                   size="sm"
                   onClick={() => setFilter('pending')}
+                  className="rounded-pill px-3"
                 >
                   ⏳ Pending ({myJobs.filter(j => !j.isApproved).length})
                 </Button>
@@ -170,74 +229,103 @@ const EmployerDashboard = () => {
                   variant={filter === 'closed' ? 'danger' : 'outline-danger'} 
                   size="sm"
                   onClick={() => setFilter('closed')}
+                  className="rounded-pill px-3"
                 >
-                  Closed ({myJobs.filter(j => j.jobStatus === 'closed').length})
+                  🔒 Closed ({myJobs.filter(j => j.jobStatus === 'closed').length})
                 </Button>
               </div>
 
               {getFilteredJobs().length === 0 ? (
-                <p className="text-muted text-center py-5">
-                  {filter === 'pending' && 'No jobs pending approval'}
-                  {filter === 'approved' && 'No approved jobs'}
-                  {filter === 'closed' && 'No closed jobs'}
-                  {filter === 'all' && 'No jobs posted yet'}
-                </p>
+                <div className="text-center py-5">
+                  <div className="fs-1 mb-3">📭</div>
+                  <p className="text-muted">
+                    {filter === 'pending' && 'No jobs pending approval'}
+                    {filter === 'approved' && 'No approved jobs'}
+                    {filter === 'closed' && 'No closed jobs'}
+                    {filter === 'all' && 'No jobs posted yet'}
+                  </p>
+                </div>
               ) : (
                 getFilteredJobs().map((job) => (
-                  <div key={job._id} className="job-card border-bottom pb-3 mb-3">
-                    <Row className="align-items-start">
-                      <Col md={7}>
-                        <h6 className="mb-2">{job.title}</h6>
-                        <p className="mb-1 small">
-                          <strong>Job Type:</strong> {job.workType?.replace('_', ' ')}
-                        </p>
-                        <p className="mb-1 small">
-                          <strong>Location:</strong> {job.location?.district}, {job.location?.state}
-                        </p>
-                        <p className="mb-1 small">
-                          <strong>Salary:</strong> ₹{job.salary?.amount} / {job.salary?.period}
-                        </p>
-                        <p className="mb-1 small">
-                          <strong>Total Positions:</strong> {job.numberOfPositions}
-                        </p>
-                      </Col>
-                      <Col md={5} className="text-end">
-                        <div className="mb-2">
-                          {!job.isApproved ? (
-                            <span className="badge bg-warning text-dark me-2">
-                              ⏳ Pending Admin Approval
-                            </span>
-                          ) : (
-                            <span className="badge bg-success me-2">
-                              ✓ Approved
-                            </span>
-                          )}
-                          <span className={`badge bg-${job.jobStatus === 'open' ? 'info' : 'secondary'}`}>
-                            {job.jobStatus === 'open' ? '🟢 Open' : '🔴 Closed'}
-                          </span>
-                        </div>
-                        <div className="mt-3">
-                          <Button 
-                            as={Link} 
-                            to={`/jobs/${job._id}`} 
-                            variant="outline-primary" 
-                            size="sm" 
-                            className="me-2"
-                          >
-                            View Details
-                          </Button>
-                          <Button 
-                            as={Link} 
-                            to={`/employer/applications/${job._id}`} 
-                            variant="outline-info" 
-                            size="sm"
-                          >
-                            Applications
-                          </Button>
-                        </div>
-                      </Col>
-                    </Row>
-                  </div>
+                  <Card key={job._id} className="border rounded-3 mb-3 hover-lift" style={{
+                    transition: 'all 0.3s ease',
+                    borderLeft: '4px solid ' + (job.isApproved ? '#10b981' : '#f59e0b')
+                  }}>
+                    <Card.Body className="p-4">
+                      <Row className="align-items-start">
+                        <Col md={8}>
+                          <div className="d-flex align-items-start mb-3">
+                            <div className="fs-4 me-3">💼</div>
+                            <div>
+                              <h5 className="mb-2 fw-bold text-dark">{job.title}</h5>
+                              <div className="mb-2">
+                                {!job.isApproved ? (
+                                  <Badge bg="warning" text="dark" className="me-2 px-3 py-2">
+                                    ⏳ Pending Admin Approval
+                                  </Badge>
+                                ) : (
+                                  <Badge bg="success" className="me-2 px-3 py-2">
+                                    ✓ Approved
+                                  </Badge>
+                                )}
+                                <Badge bg={job.jobStatus === 'open' ? 'info' : 'secondary'} className="px-3 py-2">
+                                  {job.jobStatus === 'open' ? '🟢 Open' : '🔴 Closed'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <Row className="g-2 small">
+                            <Col sm={6}>
+                              <div className="mb-2">
+                                <span className="text-muted">📍 Location:</span>
+                                <span className="ms-2 fw-semibold">{job.location?.district}, {job.location?.state}</span>
+                              </div>
+                            </Col>
+                            <Col sm={6}>
+                              <div className="mb-2">
+                                <span className="text-muted">💰 Salary:</span>
+                                <span className="ms-2 fw-semibold">₹{job.salary?.amount} / {job.salary?.period}</span>
+                              </div>
+                            </Col>
+                            <Col sm={6}>
+                              <div className="mb-2">
+                                <span className="text-muted">🏗️ Type:</span>
+                                <span className="ms-2 fw-semibold">{job.workType?.replace('_', ' ')}</span>
+                              </div>
+                            </Col>
+                            <Col sm={6}>
+                              <div className="mb-2">
+                                <span className="text-muted">👥 Positions:</span>
+                                <span className="ms-2 fw-semibold">{job.numberOfPositions}</span>
+                              </div>
+                            </Col>
+                          </Row>
+                        </Col>
+                        <Col md={4} className="text-md-end">
+                          <div className="d-flex flex-column gap-2">
+                            <Button 
+                              as={Link} 
+                              to={`/jobs/${job._id}`} 
+                              variant="outline-primary" 
+                              size="sm"
+                              className="w-100"
+                            >
+                              👁️ View Details
+                            </Button>
+                            <Button 
+                              as={Link} 
+                              to={`/employer/applications/${job._id}`} 
+                              variant="outline-info" 
+                              size="sm"
+                              className="w-100"
+                            >
+                              📋 Applications
+                            </Button>
+                          </div>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
                 ))
               )}
             </Card.Body>
