@@ -13,6 +13,13 @@ const {
   deleteUser,
   getAllPaymentsAdmin,
   getAnalytics,
+  getAssignmentJobs,
+  getSuggestedWorkersForJob,
+  assignWorkersToJob,
+  getAssignmentGroups,
+  updateAssignmentVerification,
+  updateAssignmentWorkStatus,
+  updateAssignmentPaymentStatus,
 } = require('../controllers/adminController');
 const { authMiddleware, checkUserType } = require('../middleware/auth');
 
@@ -48,5 +55,14 @@ router.get('/applications', getAllApplicationsAdmin);
 
 // Payments Management
 router.get('/payments', getAllPaymentsAdmin);
+
+// Assignment Management
+router.get('/assignment/jobs', getAssignmentJobs);
+router.get('/assignment/jobs/:jobId/suggestions', getSuggestedWorkersForJob);
+router.post('/assignment/jobs/:jobId/assign', assignWorkersToJob);
+router.get('/assignment/groups', getAssignmentGroups);
+router.put('/assignment/groups/:groupId/verification', updateAssignmentVerification);
+router.put('/assignment/groups/:groupId/work-status', updateAssignmentWorkStatus);
+router.put('/assignment/groups/:groupId/payment-status', updateAssignmentPaymentStatus);
 
 module.exports = router;

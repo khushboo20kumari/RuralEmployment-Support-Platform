@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Container, Row, Col, Card, Form, Button, Tabs, Tab, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { authAPI, workerAPI, employerAPI, reviewAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, loadUser } = useContext(AuthContext);
   const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
@@ -14,6 +16,7 @@ const Profile = () => {
   const [userProfile, setUserProfile] = useState({
     name: '',
     phone: '',
+    userType: 'worker',
   });
 
   const [workerProfile, setWorkerProfile] = useState({
@@ -65,6 +68,7 @@ const Profile = () => {
       setUserProfile({
         name: userRes.data.user.name,
         phone: userRes.data.user.phone,
+        userType: userRes.data.user.userType || 'worker',
       });
 
       if (userRes.data.user.userType === 'worker') {
@@ -102,10 +106,10 @@ const Profile = () => {
   }, []);
 
   useEffect(() => {
-    if (!user?._id) return;
+    if (!user?._id || !user?.userType) return;
     fetchProfile();
     fetchReviews();
-  }, [user?._id, fetchProfile, fetchReviews]);
+  }, [user?._id, user?.userType, fetchProfile, fetchReviews]);
 
   const toggleSkill = (value) => {
     const exists = workerProfile.skills.includes(value);
@@ -121,9 +125,15 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const previousUserType = user?.userType;
       await authAPI.updateProfile(userProfile);
       await loadUser();
       toast.success(language === 'hi' ? 'मूल जानकारी सफलतापूर्वक अपडेट हुई' : 'Basic profile updated successfully');
+
+      if (userProfile.userType && userProfile.userType !== previousUserType) {
+        toast.info(language === 'hi' ? 'रोल अपडेट हो गया, सही डैशबोर्ड खोला जा रहा है' : 'Role updated, opening your dashboard');
+        navigate(userProfile.userType === 'employer' ? '/employer/dashboard' : '/worker/dashboard');
+      }
     } catch (error) {
       toast.error(language === 'hi' ? 'प्रोफाइल अपडेट नहीं हो पाई' : 'Error updating profile');
     } finally {
@@ -203,6 +213,22 @@ const Profile = () => {
                         placeholder={language === 'hi' ? '10 अंकों का नंबर लिखें' : 'Enter 10-digit mobile number'}
                         onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
                       />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>{language === 'hi' ? 'मैं कौन हूँ?' : 'I am a'}</Form.Label>
+                      <Form.Select
+                        value={userProfile.userType}
+                        onChange={(e) => setUserProfile({ ...userProfile, userType: e.target.value })}
+                      >
+                        <option value="worker">👷 {language === 'hi' ? 'काम करने वाला (Worker)' : 'Worker (Looking for jobs)'}</option>
+                        <option value="employer">🏢 {language === 'hi' ? 'काम देने वाला (Employer)' : 'Employer (Hiring workers)'}</option>
+                      </Form.Select>
+                      <Form.Text className="text-muted">
+                        {language === 'hi'
+                          ? 'रोल चुनने के बाद आपका डैशबोर्ड उसी हिसाब से दिखेगा।'
+                          : 'Your dashboard will update based on selected role.'}
+                      </Form.Text>
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -446,7 +472,7 @@ const Profile = () => {
                     ? (language === 'hi' ? 'मज़दूर' : 'Worker')
                     : user?.userType === 'employer'
                     ? (language === 'hi' ? 'मालिक' : 'Employer')
-                    : 'Admin'}
+                    : (language === 'hi' ? 'यूज़र' : 'User')}
                 </Badge>
               </p>
               <p><strong>{language === 'hi' ? 'ईमेल' : 'Email'}:</strong> {user?.email}</p>

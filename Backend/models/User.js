@@ -14,13 +14,25 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
     unique: true,
+    sparse: true,
   },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return this.authProvider !== 'google';
+    },
     select: false,
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
   },
   userType: {
     type: String,
@@ -55,7 +67,7 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+  if (!this.password || !this.isModified('password')) {
     return next();
   }
   try {

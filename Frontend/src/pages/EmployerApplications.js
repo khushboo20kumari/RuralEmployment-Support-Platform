@@ -42,45 +42,20 @@ const EmployerApplications = () => {
     }
   };
 
-  const startWork = async (applicationId) => {
-    try {
-      setBusyId(applicationId);
-      await applicationAPI.startWork(applicationId);
-      toast.success('Work started. Now daily attendance mark kar sakte hain.');
-      fetchApplications();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Work start nahi ho paaya');
-    } finally {
-      setBusyId(null);
-    }
+  const formatUpdatedBy = (updatedBy) => {
+    if (updatedBy === 'worker') return 'Worker';
+    if (updatedBy === 'employer') return 'Employer';
+    if (updatedBy === 'admin') return 'Admin';
+    return 'System';
   };
 
-  const markAttendance = async (applicationId) => {
-    try {
-      setBusyId(applicationId);
-      await applicationAPI.markAttendance(applicationId);
-      toast.success('Aaj ka attendance mark ho gaya');
-      fetchApplications();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Attendance mark nahi ho paaya');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const markComplete = async (applicationId) => {
-    if (!window.confirm('Kya ye kaam complete ho gaya hai?')) return;
-
-    try {
-      setBusyId(applicationId);
-      await applicationAPI.employerComplete(applicationId);
-      toast.success('Work completed. Ab Payments page me final payment button use karein.');
-      fetchApplications();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Complete mark nahi ho paaya');
-    } finally {
-      setBusyId(null);
-    }
+  const formatPaymentStatus = (paymentStatus) => {
+    if (!paymentStatus) return 'Not started';
+    if (paymentStatus === 'advance_paid') return 'Advance paid by employer';
+    if (paymentStatus === 'pending') return 'On platform, waiting admin release';
+    if (paymentStatus === 'completed') return 'Released to worker';
+    if (paymentStatus === 'failed') return 'Payment failed';
+    return paymentStatus;
   };
 
   if (loading) {
@@ -95,7 +70,7 @@ const EmployerApplications = () => {
     <Container className="my-3 my-md-4">
       <div className="mb-4">
         <h3 className="fw-bold mb-1">📋 Worker Applications</h3>
-        <p className="text-muted mb-0">Accept worker → Start work → Mark daily attendance → Mark completed</p>
+        <p className="text-muted mb-0">Accept worker. Work completion and payment stage are now auto-updated by assigned date timeline.</p>
       </div>
 
       {applications.length === 0 ? (
@@ -137,6 +112,38 @@ const EmployerApplications = () => {
                         <strong>Work Started:</strong>{' '}
                         {app.workStarted ? new Date(app.workStartedDate || app.startDate).toLocaleDateString('en-IN') : 'No'}
                       </div>
+                      <div>
+                        <strong>Assigned Duration:</strong>{' '}
+                        {app.jobId?.startDate ? new Date(app.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                        {' '}to{' '}
+                        {app.jobId?.endDate ? new Date(app.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                      </div>
+                      <div>
+                        <strong>Payment:</strong> {formatPaymentStatus(app.latestPayment?.status)}
+                        {app.latestPayment?.updatedAt && (
+                          <span className="text-muted"> • {new Date(app.latestPayment.updatedAt).toLocaleString('en-IN')}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="small mt-2 p-2 bg-light rounded-3">
+                      <div className="fw-semibold mb-1">Shared Work Updates (Worker / Employer / Admin)</div>
+                      {(() => {
+                        const updates = app.progressUpdates || [];
+                        if (!updates.length) return <div className="text-muted">No updates yet</div>;
+
+                        return updates
+                          .slice(-3)
+                          .reverse()
+                          .map((update, idx) => (
+                            <div key={`${app._id}-u-${idx}`} className="mb-1">
+                              <span className="fw-semibold">{update.progressPercent || 0}%</span> • {update.note || 'Progress update'}
+                              <div className="text-muted">
+                                {formatUpdatedBy(update.updatedBy)} • {new Date(update.updatedAt).toLocaleString('en-IN')}
+                              </div>
+                            </div>
+                          ));
+                      })()}
                     </div>
 
                     <Form.Control
@@ -165,33 +172,6 @@ const EmployerApplications = () => {
                         disabled={isBusy || !canTakeDecision}
                       >
                         ❌ Reject
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() => startWork(app._id)}
-                        disabled={isBusy || normalizedStatus !== 'accepted' || app.workStarted}
-                      >
-                        🚀 Start Work
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline-info"
-                        onClick={() => markAttendance(app._id)}
-                        disabled={isBusy || normalizedStatus !== 'accepted' || !app.workStarted}
-                      >
-                        📍 Mark Daily Attendance
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline-success"
-                        onClick={() => markComplete(app._id)}
-                        disabled={isBusy || normalizedStatus !== 'accepted' || !app.workStarted}
-                      >
-                        ✔️ Mark Completed
                       </Button>
                     </div>
                   </Col>

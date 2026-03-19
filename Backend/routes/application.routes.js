@@ -9,6 +9,7 @@ const {
 	markAttendance,
 	startWork,
 	completeByEmployer,
+	updateWorkProgress,
 } = require('../controllers/applicationController');
 const { authMiddleware, checkUserType } = require('../middleware/auth');
 
@@ -18,6 +19,7 @@ const router = express.Router();
 router.post('/apply/:jobId', authMiddleware, checkUserType(['worker']), applyForJob);
 router.get('/my-applications/list', authMiddleware, checkUserType(['worker']), getWorkerApplications);
 router.put('/:applicationId/complete', authMiddleware, checkUserType(['worker']), markJobAsCompleted);
+router.put('/:applicationId/progress', authMiddleware, checkUserType(['worker']), updateWorkProgress);
 router.delete('/:applicationId/cancel', authMiddleware, checkUserType(['worker']), cancelApplication);
 
 // Employer routes

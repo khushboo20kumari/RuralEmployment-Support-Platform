@@ -22,6 +22,8 @@ import Profile from './pages/Profile';
 import EmployerPayments from './pages/EmployerPayments';
 import WorkerPayments from './pages/WorkerPayments';
 import EmployerApplications from './pages/EmployerApplications';
+import Messages from './pages/Messages';
+import MessageInbox from './pages/MessageInbox';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const HomeResolver = () => {
@@ -64,21 +66,16 @@ const RolePageLayout = ({ children }) => {
       { to: '/jobs', label: 'Public Jobs', icon: '📋' },
       { to: '/profile', label: 'Account', icon: '👤' },
     ],
-    admin: [
-      { to: '/admin/dashboard', label: 'Dashboard', icon: '🏠' },
-    ],
   };
 
   const titleByRole = {
     worker: '👷 Worker Panel',
     employer: '🏢 Employer Panel',
-    admin: '👨‍⚖️ Admin Panel',
   };
 
   const subtitleByRole = {
     worker: 'Use left options easily',
     employer: 'Manage jobs from left menu',
-    admin: 'Platform controls in one place',
   };
 
   return (
@@ -186,17 +183,15 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
+
             {/* Admin Routes */}
-            <Route 
-              path="/admin/dashboard" 
+            <Route
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <RolePageLayout>
-                    <AdminDashboard />
-                  </RolePageLayout>
+                  <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             
             {/* Common Routes */}
@@ -209,6 +204,33 @@ function App() {
                   </RolePageLayout>
                 </ProtectedRoute>
               } 
+            />
+
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute allowedRoles={['worker', 'employer', 'admin']}>
+                  <MessageInbox />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/messages/:otherUserId" 
+              element={
+                <ProtectedRoute allowedRoles={['worker', 'employer', 'admin']}>
+                  <Messages />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route
+              path="/messages/group/:chatId"
+              element={
+                <ProtectedRoute allowedRoles={['worker', 'employer', 'admin']}>
+                  <Messages />
+                </ProtectedRoute>
+              }
             />
 
             <Route path="*" element={<Navigate to="/" replace />} />

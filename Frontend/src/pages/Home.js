@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { useLanguage } from '../hooks/useLanguage';
+import { jobAPI } from '../services/api';
 
 const Home = () => {
   const { t } = useLanguage();
+  const [latestJobs, setLatestJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
   
   // Create falling rain drops effect
   const rainDrops = Array.from({ length: 25 }).map((_, i) => ({
@@ -13,6 +16,21 @@ const Home = () => {
     delay: Math.random() * 2,
     duration: 6 + Math.random() * 4,
   }));
+
+  useEffect(() => {
+    const fetchLatestJobs = async () => {
+      try {
+        const response = await jobAPI.getAll({ page: 1, limit: 6 });
+        setLatestJobs(response.data.jobs || []);
+      } catch (error) {
+        setLatestJobs([]);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+
+    fetchLatestJobs();
+  }, []);
 
   return (
     <div className="home-page">
@@ -95,7 +113,7 @@ const Home = () => {
         <Container>
           <h2 className="section-title text-center mb-5 text-white">🚀 {t('home.howItWorks')}</h2>
           <Row>
-            <Col md={4} className="mb-4">
+            <Col md={6} className="mb-4">
               <Card className="how-it-works-card h-100">
                 <Card.Body>
                   <div className="step-number">1</div>
@@ -108,14 +126,14 @@ const Home = () => {
                     <li>{t('home.workerStep4')}</li>
                     <li>{t('home.workerStep5')}</li>
                   </ol>
-                  <Button as={Link} to="/register?type=worker" variant="primary" className="w-100 mt-3">
+                  <Button as={Link} to="/register" variant="primary" className="w-100 mt-3">
                     {t('home.registerAsWorker')}
                   </Button>
                 </Card.Body>
               </Card>
             </Col>
 
-            <Col md={4} className="mb-4">
+            <Col md={6} className="mb-4">
               <Card className="how-it-works-card h-100">
                 <Card.Body>
                   <div className="step-number">2</div>
@@ -128,28 +146,8 @@ const Home = () => {
                     <li>{t('home.employerStep4')}</li>
                     <li>{t('home.employerStep5')}</li>
                   </ol>
-                  <Button as={Link} to="/register?type=employer" variant="primary" className="w-100 mt-3">
+                  <Button as={Link} to="/register" variant="primary" className="w-100 mt-3">
                     {t('home.registerAsEmployer')}
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col md={4} className="mb-4">
-              <Card className="how-it-works-card h-100">
-                <Card.Body>
-                  <div className="step-number">3</div>
-                  <div className="mb-3" style={{ fontSize: '3rem' }}>👨‍⚖️</div>
-                  <Card.Title className="fw-bold">{t('home.forAdmin')}</Card.Title>
-                  <ol className="text-sm">
-                    <li>{t('home.adminStep1')}</li>
-                    <li>{t('home.adminStep2')}</li>
-                    <li>{t('home.adminStep3')}</li>
-                    <li>{t('home.adminStep4')}</li>
-                    <li>{t('home.adminStep5')}</li>
-                  </ol>
-                  <Button as={Link} to="/login" variant="primary" className="w-100 mt-3">
-                    {t('home.adminLogin')}
                   </Button>
                 </Card.Body>
               </Card>
@@ -243,6 +241,45 @@ const Home = () => {
           </Row>
         </Container>
       </div>
+
+      {/* Public Jobs Preview */}
+      <Container className="py-5">
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <h2 className="section-title mb-0">📢 Latest Public Jobs</h2>
+          <Button as={Link} to="/jobs" variant="outline-primary" className="fw-bold">
+            View All Jobs
+          </Button>
+        </div>
+
+        {jobsLoading ? (
+          <div className="text-center py-4">
+            <div className="spinner-border text-primary" role="status" />
+          </div>
+        ) : latestJobs.length === 0 ? (
+          <Card className="border-0 shadow-sm">
+            <Card.Body className="text-center py-4 text-muted">
+              No public jobs available right now.
+            </Card.Body>
+          </Card>
+        ) : (
+          <Row>
+            {latestJobs.slice(0, 3).map((job) => (
+              <Col md={4} key={job._id} className="mb-4">
+                <Card className="h-100 border-0 shadow-sm">
+                  <Card.Body>
+                    <h5 className="fw-bold mb-2">{job.title}</h5>
+                    <p className="text-muted mb-2">📍 {job.location?.district || 'Location not specified'}</p>
+                    <p className="mb-3">💰 ₹{job.salary?.amount || 0} / {job.salary?.period || 'day'}</p>
+                    <Button as={Link} to={`/jobs/${job._id}`} variant="primary" className="w-100">
+                      View Details
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Container>
 
       {/* CTA Section */}
       <div className="cta-section py-5">

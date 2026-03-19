@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Badge, Button, Row, Col } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { applicationAPI } from '../services/api';
+import { applicationAPI, messageAPI } from '../services/api';
 
 const Applications = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +45,47 @@ const Applications = () => {
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to mark job complete');
       }
+    }
+  };
+
+  const handleUpdateProgress = async (applicationId, progressPercent) => {
+    try {
+      const note = window.prompt('Short progress note (optional):', '');
+      await applicationAPI.updateWorkProgress(applicationId, { progressPercent, note: note || '' });
+      toast.success(`Progress updated to ${progressPercent}%`);
+      fetchApplications();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update progress');
+    }
+  };
+
+  const formatUpdatedBy = (updatedBy) => {
+    if (updatedBy === 'worker') return 'Worker';
+    if (updatedBy === 'employer') return 'Employer';
+    if (updatedBy === 'admin') return 'Admin';
+    return 'System';
+  };
+
+  const formatPaymentStatus = (paymentStatus) => {
+    if (!paymentStatus) return 'Not started';
+    if (paymentStatus === 'advance_paid') return 'Advance paid by employer';
+    if (paymentStatus === 'pending') return 'On platform, waiting release';
+    if (paymentStatus === 'completed') return 'Released to worker';
+    if (paymentStatus === 'failed') return 'Payment failed';
+    return paymentStatus;
+  };
+
+  const openGroupChat = async (jobId) => {
+    try {
+      const response = await messageAPI.getOrCreateJobGroup(jobId);
+      const groupChatId = response.data?.chat?._id;
+      if (!groupChatId) {
+        toast.error('Group chat not available');
+        return;
+      }
+      navigate(`/messages/group/${groupChatId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to open group chat');
     }
   };
 
@@ -132,6 +174,12 @@ const Applications = () => {
                         <p className="mb-1">
                           <strong>📅 Applied:</strong> {new Date(app.applicationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
+                        <p className="mb-1">
+                          <strong>🗓️ Work Duration:</strong>{' '}
+                          {app.jobId?.startDate ? new Date(app.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                          {' '}to{' '}
+                          {app.jobId?.endDate ? new Date(app.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                        </p>
                         {normalizedStatus === 'accepted' && (
                           <p className="mb-1">
                             <strong>🚀 Work Started:</strong> {app.workStarted ? 'Yes' : 'Not started yet by employer'}
@@ -142,6 +190,23 @@ const Applications = () => {
                             <strong>📍 Attendance Marked:</strong> {app.attendanceCount || 0} day(s)
                           </p>
                         )}
+                        {normalizedStatus === 'accepted' && (
+                          <p className="mb-1">
+                            <strong>📈 Latest Progress:</strong>{' '}
+                            {(() => {
+                              const updates = app.progressUpdates || [];
+                              if (!updates.length) return '0%';
+                              const latest = updates[updates.length - 1];
+                              return `${latest.progressPercent || 0}%`;
+                            })()}
+                          </p>
+                        )}
+                        <p className="mb-1">
+                          <strong>💳 Payment Status:</strong> {formatPaymentStatus(app.latestPayment?.status)}
+                          {app.latestPayment?.updatedAt && (
+                            <span className="text-muted"> • {new Date(app.latestPayment.updatedAt).toLocaleString('en-IN')}</span>
+                          )}
+                        </p>
                       </div>
 
                       {app.appliedMessage && (
@@ -156,10 +221,72 @@ const Applications = () => {
                           <p className="mb-0 small text-muted">{app.employerNotes}</p>
                         </div>
                       )}
+
+                      <div className="mt-2 p-2 bg-light rounded-3">
+                        <strong className="small">Shared Work Updates:</strong>
+                        {(() => {
+                          const updates = app.progressUpdates || [];
+                          if (!updates.length) {
+                            return <p className="mb-0 small text-muted">No progress updates yet.</p>;
+                          }
+
+                          return (
+                            <div className="small mt-1">
+                              {updates.slice(-3).reverse().map((update, idx) => (
+                                <div key={`${app._id}-progress-${idx}`} className="mb-1">
+                                  <span className="fw-semibold">{update.progressPercent || 0}%</span> • {update.note || 'Progress updated'}
+                                  <div className="text-muted">
+                                    {formatUpdatedBy(update.updatedBy)} • {new Date(update.updatedAt).toLocaleString('en-IN')}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </Col>
                     
                     <Col xs={12} lg={4} className="text-lg-end">
                       <div className="d-grid gap-2">
+                        {normalizedStatus === 'accepted' && (
+                          <>
+                            <div className="d-flex gap-1 flex-wrap mb-1 justify-content-lg-end">
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="rounded-3"
+                                onClick={() => handleUpdateProgress(app._id, 25)}
+                              >
+                                25%
+                              </Button>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="rounded-3"
+                                onClick={() => handleUpdateProgress(app._id, 50)}
+                              >
+                                50%
+                              </Button>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="rounded-3"
+                                onClick={() => handleUpdateProgress(app._id, 75)}
+                              >
+                                75%
+                              </Button>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="rounded-3"
+                                onClick={() => handleUpdateProgress(app._id, 100)}
+                              >
+                                100%
+                              </Button>
+                            </div>
+
+                          </>
+                        )}
                         {normalizedStatus === 'accepted' && (
                           <Button 
                             variant="success" 
@@ -168,6 +295,16 @@ const Applications = () => {
                             onClick={() => handleMarkCompleted(app._id)}
                           >
                             ✅ काम पूरा हुआ (Mark Completed)
+                          </Button>
+                        )}
+                        {['accepted', 'completed'].includes(normalizedStatus) && (
+                          <Button
+                            variant="outline-info"
+                            size="sm"
+                            className="rounded-3"
+                            onClick={() => openGroupChat(app.jobId?._id)}
+                          >
+                            💬 Group Chat (Admin + Employer)
                           </Button>
                         )}
                         <Button 

@@ -5,7 +5,48 @@ const { translateDescription } = require('../utils/translator');
 // Post a Job
 exports.postJob = async (req, res) => {
   try {
-    const { title, description, titleHi, descriptionHi, skillsRequired, workType, location, salary, workingHours, numberOfPositions, startDate, endDate, experienceRequired, benefits, accommodation, mealProvided } = req.body;
+    const {
+      title,
+      description,
+      titleHi,
+      descriptionHi,
+      skillsRequired,
+      workType,
+      location,
+      salary,
+      workingHours,
+      numberOfPositions,
+      startDate,
+      endDate,
+      experienceRequired,
+      benefits,
+      accommodation,
+      mealProvided,
+      jobProviderContact,
+    } = req.body;
+
+    if (!title || !description || !location?.district || !location?.state) {
+      return res.status(400).json({ message: 'title, description, district and state are required' });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'Work start date and end date are required' });
+    }
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    if (Number.isNaN(parsedStartDate.getTime()) || Number.isNaN(parsedEndDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid start/end date format' });
+    }
+
+    if (parsedEndDate < parsedStartDate) {
+      return res.status(400).json({ message: 'End date must be same or after start date' });
+    }
+
+    if (!jobProviderContact?.phone || !jobProviderContact?.address) {
+      return res.status(400).json({ message: 'Job provider phone and address are required for admin verification' });
+    }
 
     const employer = await Employer.findOne({ userId: req.userId });
 
@@ -37,16 +78,19 @@ exports.postJob = async (req, res) => {
       salary,
       workingHours,
       numberOfPositions,
-      startDate,
-      endDate,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
       experienceRequired,
       benefits,
       accommodation,
       mealProvided,
+      jobProviderContact,
+      isApproved: true,
+      approvedAt: new Date(),
     });
 
     res.status(201).json({
-      message: 'Job posted successfully and sent for admin approval',
+      message: 'Job posted successfully.',
       job,
     });
   } catch (error) {
@@ -62,7 +106,7 @@ exports.getAllJobs = async (req, res) => {
   try {
     const { workType, location, minSalary, maxSalary, page = 1, limit = 10 } = req.query;
 
-    let filter = { jobStatus: 'open', isApproved: true };
+    let filter = { jobStatus: 'open' };
 
     if (workType) {
       filter.workType = workType;
@@ -102,10 +146,6 @@ exports.getJobById = async (req, res) => {
     const job = await Job.findById(req.params.id).populate('employerId', 'companyName contactPerson');
 
     if (!job) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    if (!job.isApproved) {
       return res.status(404).json({ message: 'Job not found' });
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Tabs, Tab, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { applicationAPI, workerAPI, paymentAPI } from '../services/api';
+import { applicationAPI, workerAPI, paymentAPI, messageAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
 import { AuthContext } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
@@ -22,6 +22,7 @@ const WorkerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [completingId, setCompletingId] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
@@ -84,11 +85,25 @@ const WorkerDashboard = () => {
       ];
       const completion = (fields.filter(Boolean).length / fields.length) * 100;
       setProfileCompletion(Math.round(completion));
+
+      try {
+        const unreadRes = await messageAPI.getUnreadCount();
+        setUnreadCount(Number(unreadRes.data?.unreadCount || 0));
+      } catch (e) {
+        setUnreadCount(0);
+      }
     } catch (error) {
       toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatUpdatedBy = (updatedBy) => {
+    if (updatedBy === 'worker') return 'Worker';
+    if (updatedBy === 'employer') return 'Employer';
+    if (updatedBy === 'admin') return 'Admin';
+    return 'System';
   };
 
   if (loading) {
@@ -140,6 +155,26 @@ const WorkerDashboard = () => {
               </div>
             </Col>
           </Row>
+        </Card.Body>
+      </Card>
+
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h5 className="mb-1 fw-bold">👤 Profile Snapshot</h5>
+              <p className="text-muted mb-0">
+                Skills: {profile?.skills?.length ? profile.skills.join(', ') : 'Not added'}
+              </p>
+              <small className="text-muted">Experience: {profile?.experience || 0} years • Availability: {profile?.availability || 'flexible'}</small>
+            </div>
+            <div className="d-flex gap-2 flex-wrap">
+              <Button as={Link} to="/messages" variant="outline-info">
+                💬 Messages {unreadCount > 0 ? `(${unreadCount})` : ''}
+              </Button>
+              <Button as={Link} to="/profile" variant="outline-primary">Update Profile</Button>
+            </div>
+          </div>
         </Card.Body>
       </Card>
 
@@ -439,6 +474,18 @@ const WorkerDashboard = () => {
                               <span className="text-muted">📅 स्वीकृत:</span>
                               <span className="ms-2 fw-semibold">{new Date(app.acceptedDate || app.createdAt).toLocaleDateString('hi-IN')}</span>
                             </p>
+                            {!!(app.progressUpdates || []).length && (
+                              <p className="mt-2 mb-0">
+                                <span className="text-muted">🗂 Latest Update:</span>
+                                <span className="ms-2 fw-semibold">
+                                  {(app.progressUpdates?.[app.progressUpdates.length - 1]?.progressPercent || 0)}% • {app.progressUpdates?.[app.progressUpdates.length - 1]?.note || 'Progress updated'}
+                                </span>
+                                <br />
+                                <span className="text-muted">
+                                  {formatUpdatedBy(app.progressUpdates?.[app.progressUpdates.length - 1]?.updatedBy)} • {new Date(app.progressUpdates?.[app.progressUpdates.length - 1]?.updatedAt).toLocaleString('hi-IN')}
+                                </span>
+                              </p>
+                            )}
                           </div>
                         </Col>
                         <Col md={4} className="text-md-end">
@@ -515,6 +562,18 @@ const WorkerDashboard = () => {
                                 <span className="text-muted">📅 पूरा होने की तारीख:</span>
                                 <span className="ms-2 fw-semibold">{new Date(app.completionDate || app.createdAt).toLocaleDateString('hi-IN')}</span>
                               </p>
+                              {!!(app.progressUpdates || []).length && (
+                                <p className="mt-2 mb-0">
+                                  <span className="text-muted">🗂 Latest Update:</span>
+                                  <span className="ms-2 fw-semibold">
+                                    {(app.progressUpdates?.[app.progressUpdates.length - 1]?.progressPercent || 0)}% • {app.progressUpdates?.[app.progressUpdates.length - 1]?.note || 'Progress updated'}
+                                  </span>
+                                  <br />
+                                  <span className="text-muted">
+                                    {formatUpdatedBy(app.progressUpdates?.[app.progressUpdates.length - 1]?.updatedBy)} • {new Date(app.progressUpdates?.[app.progressUpdates.length - 1]?.updatedAt).toLocaleString('hi-IN')}
+                                  </span>
+                                </p>
+                              )}
                             </div>
                           </Col>
                           <Col md={4} className="text-md-end">

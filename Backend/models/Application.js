@@ -58,6 +58,28 @@ const applicationSchema = new mongoose.Schema({
       },
     },
   ],
+  progressUpdates: [
+    {
+      progressPercent: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
+      note: {
+        type: String,
+        default: '',
+      },
+      updatedBy: {
+        type: String,
+        enum: ['worker', 'employer', 'admin'],
+        default: 'worker',
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   workStarted: {
     type: Boolean,
     default: false,

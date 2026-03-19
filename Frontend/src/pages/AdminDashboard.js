@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Form } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useLanguage } from '../hooks/useLanguage';
@@ -8,6 +9,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({});
   const [users, setUsers] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -15,8 +17,18 @@ const AdminDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [assignmentJobs, setAssignmentJobs] = useState([]);
+  const [assignmentGroups, setAssignmentGroups] = useState([]);
+  const [activeTab, setActiveTab] = useState('assignment');
+  const [suggestionsByJob, setSuggestionsByJob] = useState({});
+  const [selectedWorkersByJob, setSelectedWorkersByJob] = useState({});
+  const [loadingSuggestionsByJob, setLoadingSuggestionsByJob] = useState({});
+  const [assigningJobId, setAssigningJobId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [releasingPaymentId, setReleasingPaymentId] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [adminChats, setAdminChats] = useState([]);
+  const [messageRoleFilter, setMessageRoleFilter] = useState('all');
 
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -24,7 +36,19 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [statsRes, usersRes, workersRes, employersRes, jobsRes, appsRes, paymentsRes] = await Promise.all([
+      const [
+        statsRes,
+        usersRes,
+        workersRes,
+        employersRes,
+        jobsRes,
+        appsRes,
+        paymentsRes,
+        assignmentJobsRes,
+        assignmentGroupsRes,
+        unreadRes,
+        chatsRes,
+      ] = await Promise.all([
         axios.get(`${API_URL}/admin/stats`, { headers: getAuthHeader() }),
         axios.get(`${API_URL}/admin/users`, { headers: getAuthHeader() }),
         axios.get(`${API_URL}/admin/workers`, { headers: getAuthHeader() }),
@@ -32,6 +56,10 @@ const AdminDashboard = () => {
         axios.get(`${API_URL}/admin/jobs`, { headers: getAuthHeader() }),
         axios.get(`${API_URL}/admin/applications`, { headers: getAuthHeader() }),
         axios.get(`${API_URL}/admin/payments`, { headers: getAuthHeader() }),
+        axios.get(`${API_URL}/admin/assignment/jobs`, { headers: getAuthHeader() }),
+        axios.get(`${API_URL}/admin/assignment/groups`, { headers: getAuthHeader() }),
+        axios.get(`${API_URL}/messages/unread/count`, { headers: getAuthHeader() }),
+        axios.get(`${API_URL}/messages`, { headers: getAuthHeader() }),
       ]);
 
       setStats(statsRes.data.stats);
@@ -41,6 +69,10 @@ const AdminDashboard = () => {
       setJobs(jobsRes.data.jobs);
       setApplications(appsRes.data.applications);
       setPayments(paymentsRes.data.payments);
+      setAssignmentJobs(assignmentJobsRes.data.jobs || []);
+      setAssignmentGroups(assignmentGroupsRes.data.groups || []);
+      setUnreadMessages(Number(unreadRes.data?.unreadCount || 0));
+      setAdminChats(chatsRes.data?.chats || []);
     } catch (error) {
       toast.error(t('common.errorOccurred'));
     } finally {
@@ -78,20 +110,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleApproveJob = async (jobId, isApproved) => {
-    try {
-      await axios.put(
-        `${API_URL}/admin/jobs/${jobId}/approve`,
-        { isApproved },
-        { headers: getAuthHeader() }
-      );
-      toast.success(t(isApproved ? 'admin.jobApprovedSuccess' : 'admin.jobUnapprovedSuccess'));
-      fetchDashboardData();
-    } catch (error) {
-      toast.error(t('admin.jobApprovalError'));
-    }
-  };
-
   const handleReleasePaymentToWorker = async (paymentId) => {
     try {
       setReleasingPaymentId(paymentId);
@@ -104,6 +122,182 @@ const AdminDashboard = () => {
       setReleasingPaymentId(null);
     }
   };
+
+  const handleLoadSuggestions = async (jobId) => {
+    try {
+      setLoadingSuggestionsByJob((prev) => ({ ...prev, [jobId]: true }));
+      const response = await axios.get(`${API_URL}/admin/assignment/jobs/${jobId}/suggestions`, {
+        headers: getAuthHeader(),
+      });
+
+      setSuggestionsByJob((prev) => ({
+        ...prev,
+        [jobId]: response.data.workers || [],
+      }));
+    } catch (error) {
+      toast.error('Suggested workers load karne me problem hui');
+    } finally {
+      setLoadingSuggestionsByJob((prev) => ({ ...prev, [jobId]: false }));
+    }
+  };
+
+  const toggleWorkerSelection = (jobId, workerId) => {
+    setSelectedWorkersByJob((prev) => {
+      const existing = prev[jobId] || [];
+      const next = existing.includes(workerId)
+        ? existing.filter((id) => id !== workerId)
+        : [...existing, workerId];
+
+      return {
+        ...prev,
+        [jobId]: next,
+      };
+    });
+  };
+
+  const handleAssignWorkers = async (job) => {
+    const selectedWorkers = selectedWorkersByJob[job._id] || [];
+
+    if (selectedWorkers.length === 0) {
+      toast.info('Pehle worker select karein');
+      return;
+    }
+
+    if (selectedWorkers.length > job.neededWorkers) {
+      toast.error(`Is job me abhi sirf ${job.neededWorkers} worker assign ho sakte hain`);
+      return;
+    }
+
+    try {
+      setAssigningJobId(job._id);
+      await axios.post(
+        `${API_URL}/admin/assignment/jobs/${job._id}/assign`,
+        {
+          workerIds: selectedWorkers,
+          adminNotes: 'Admin matched workers after requirement check and coordination.',
+          employerContactStatus: 'contacted',
+        },
+        { headers: getAuthHeader() }
+      );
+
+      toast.success('Workers successfully assign ho gaye');
+
+      setSelectedWorkersByJob((prev) => ({
+        ...prev,
+        [job._id]: [],
+      }));
+
+      await fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Worker assignment failed');
+    } finally {
+      setAssigningJobId(null);
+    }
+  };
+
+  const handleAutoMatchAndAssign = async (job) => {
+    try {
+      setAssigningJobId(job._id);
+
+      const suggestionsRes = await axios.get(`${API_URL}/admin/assignment/jobs/${job._id}/suggestions`, {
+        headers: getAuthHeader(),
+      });
+
+      const suggestions = suggestionsRes.data.workers || [];
+      const countToAssign = Math.max(0, Number(job.neededWorkers) || 0);
+      const autoSelected = suggestions.slice(0, countToAssign).map((w) => w._id);
+
+      if (!autoSelected.length) {
+        toast.info('Is job ke liye suitable worker abhi available nahi hai');
+        return;
+      }
+
+      await axios.post(
+        `${API_URL}/admin/assignment/jobs/${job._id}/assign`,
+        {
+          workerIds: autoSelected,
+          adminNotes: 'Auto matched by admin and assigned to employer requirement.',
+          employerContactStatus: 'contacted',
+        },
+        { headers: getAuthHeader() }
+      );
+
+      toast.success(`${autoSelected.length} worker auto-match karke assign kar diye gaye`);
+      await fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Auto match assignment failed');
+    } finally {
+      setAssigningJobId(null);
+    }
+  };
+
+  const openGroupChat = async (jobId) => {
+    try {
+      const response = await axios.get(`${API_URL}/messages/group/job/${jobId}`, { headers: getAuthHeader() });
+      const groupChatId = response.data?.chat?._id;
+      if (!groupChatId) {
+        toast.error('Group chat not available');
+        return;
+      }
+      navigate(`/messages/group/${groupChatId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to open group chat');
+    }
+  };
+
+  const getLatestProgressUpdate = (application) => {
+    const updates = application?.progressUpdates || [];
+    if (!updates.length) return null;
+    return updates[updates.length - 1];
+  };
+
+  const formatUpdatedBy = (updatedBy) => {
+    if (!updatedBy) return 'System';
+    if (updatedBy === 'worker') return 'Worker';
+    if (updatedBy === 'employer') return 'Employer';
+    if (updatedBy === 'admin') return 'Admin';
+    return updatedBy;
+  };
+
+  const formatPaymentStatus = (paymentStatus) => {
+    if (!paymentStatus) return 'Not started';
+    if (paymentStatus === 'advance_paid') return 'Advance paid';
+    if (paymentStatus === 'pending') return 'On platform (pending release)';
+    if (paymentStatus === 'completed') return 'Released to worker';
+    if (paymentStatus === 'failed') return 'Failed';
+    return paymentStatus;
+  };
+
+
+  // Robustly get the other user for a chat (for admin)
+  const getChatOtherUser = (chat) => {
+    if (!chat) return null;
+    if (chat.chatType === 'group') return null;
+    const participants = chat.participants || [];
+    // Prefer non-admin
+    let other = participants.find((p) => p && p.userType && p.userType !== 'admin');
+    if (!other && chat.workerId?.userType && chat.workerId.userType !== 'admin') other = chat.workerId;
+    if (!other && chat.employerId?.userType && chat.employerId.userType !== 'admin') other = chat.employerId;
+    if (!other && participants.length > 0) other = participants[0];
+    return other;
+  };
+
+  // Always show all chats in 'all', never filter out group or direct
+  const filteredAdminChats = (adminChats || []).filter((chat) => {
+    if (messageRoleFilter === 'group') return chat.chatType === 'group';
+    if (messageRoleFilter === 'worker') {
+      if (chat.chatType === 'group') return false;
+      const other = getChatOtherUser(chat);
+      return (other && other.userType === 'worker') || chat.workerId?.userType === 'worker';
+    }
+    if (messageRoleFilter === 'employer') {
+      if (chat.chatType === 'group') return false;
+      const other = getChatOtherUser(chat);
+      return (other && other.userType === 'employer') || chat.employerId?.userType === 'employer';
+    }
+    // 'all': show everything
+    return true;
+  });
 
   if (loading) {
     return (
@@ -132,9 +326,14 @@ const AdminDashboard = () => {
               </div>
             </Col>
             <Col md={4} className="text-md-end">
-              <div className="text-white">
-                <h4 className="mb-0">₹{stats.platformRevenue || 0}</h4>
-                <small className="text-white-50">Platform Revenue</small>
+              <div className="d-flex justify-content-md-end gap-2 flex-wrap">
+                <div className="text-white text-md-end">
+                  <h4 className="mb-0">₹{stats.platformRevenue || 0}</h4>
+                  <small className="text-white-50">Platform Revenue</small>
+                </div>
+                <Button as={Link} to="/messages" variant="light" size="sm">
+                  💬 Messages {unreadMessages > 0 ? `(${unreadMessages})` : ''}
+                </Button>
               </div>
             </Col>
           </Row>
@@ -184,10 +383,10 @@ const AdminDashboard = () => {
             <Card.Body className="p-4">
               <div className="d-flex justify-content-between align-items-start mb-2">
                 <div className="fs-2">⏳</div>
-                <Badge bg="warning" text="dark" className="rounded-pill">Pending</Badge>
+                <Badge bg="warning" text="dark" className="rounded-pill">Open</Badge>
               </div>
-              <h3 className="fw-bold text-warning mb-1">{stats.pendingJobs || 0}</h3>
-              <div className="text-muted small">{t('admin.pendingJobs')}</div>
+              <h3 className="fw-bold text-warning mb-1">{stats.openJobs || 0}</h3>
+              <div className="text-muted small">Open Jobs</div>
             </Card.Body>
           </Card>
         </Col>
@@ -210,7 +409,7 @@ const AdminDashboard = () => {
       </Row>
 
       {/* Tabs for different sections */}
-      <Tabs defaultActiveKey="users" className="mb-3">
+      <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'users')} className="mb-3">
         {/* All Users Tab */}
         <Tab eventKey="users" title={`${t('admin.allUsers')} (${users.length})`}>
           <Card className="border-0 shadow-sm rounded-4">
@@ -245,6 +444,17 @@ const AdminDashboard = () => {
                       </td>
                       <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                       <td>
+                        {user.userType !== 'admin' && (
+                          <Button
+                            size="sm"
+                            variant="outline-info"
+                            as={Link}
+                            to={`/messages/${user._id}`}
+                            className="me-2"
+                          >
+                            Chat
+                          </Button>
+                        )}
                         {!user.isVerified ? (
                           <Button
                             size="sm"
@@ -373,9 +583,7 @@ const AdminDashboard = () => {
                     <th>{t('common.location')}</th>
                     <th>{t('common.salary')}</th>
                     <th>{t('common.status')}</th>
-                    <th>{t('admin.approval')}</th>
                     <th>{t('admin.posted')}</th>
-                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -391,31 +599,7 @@ const AdminDashboard = () => {
                           {t(`common.${job.jobStatus}`)}
                         </Badge>
                       </td>
-                      <td>
-                        <Badge bg={job.isApproved ? 'success' : 'warning'}>
-                          {job.isApproved ? t('admin.approved') : t('admin.pending')}
-                        </Badge>
-                      </td>
                       <td>{new Date(job.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        {!job.isApproved ? (
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={() => handleApproveJob(job._id, true)}
-                          >
-                            {t('admin.approve')}
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline-warning"
-                            onClick={() => handleApproveJob(job._id, false)}
-                          >
-                            {t('admin.unapprove')}
-                          </Button>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -434,7 +618,11 @@ const AdminDashboard = () => {
                     <th>{t('admin.worker')}</th>
                     <th>{t('common.job')}</th>
                     <th>{t('admin.employer')}</th>
+                    <th>Work Duration</th>
                     <th>{t('common.status')}</th>
+                    <th>Progress</th>
+                    <th>Payment Status</th>
+                    <th>Latest Update</th>
                     <th>{t('admin.appliedOn')}</th>
                   </tr>
                 </thead>
@@ -445,6 +633,13 @@ const AdminDashboard = () => {
                       <td>{app.jobId?.title || 'N/A'}</td>
                       <td>{app.employerId?.userId?.name || 'N/A'}</td>
                       <td>
+                        <div className="small">
+                          {(app.jobId?.startDate && app.jobId?.endDate)
+                            ? `${new Date(app.jobId.startDate).toLocaleDateString('en-IN')} - ${new Date(app.jobId.endDate).toLocaleDateString('en-IN')}`
+                            : 'Not set'}
+                        </div>
+                      </td>
+                      <td>
                         <Badge
                           bg={
                             app.status === 'accepted' ? 'success' :
@@ -454,6 +649,35 @@ const AdminDashboard = () => {
                         >
                           {app.status}
                         </Badge>
+                      </td>
+                      <td>
+                        {(() => {
+                          const updates = app.progressUpdates || [];
+                          if (!updates.length) return '0%';
+                          const latest = updates[updates.length - 1];
+                          return `${latest.progressPercent || 0}%`;
+                        })()}
+                      </td>
+                      <td style={{ minWidth: 180 }}>
+                        <div className="small fw-semibold">{formatPaymentStatus(app.latestPayment?.status)}</div>
+                        {app.latestPayment?.updatedAt && (
+                          <div className="small text-muted">{new Date(app.latestPayment.updatedAt).toLocaleString('en-IN')}</div>
+                        )}
+                      </td>
+                      <td style={{ minWidth: 220 }}>
+                        {(() => {
+                          const latest = getLatestProgressUpdate(app);
+                          if (!latest) return <span className="text-muted small">No update yet</span>;
+
+                          return (
+                            <div className="small">
+                              <div className="fw-semibold">{latest.note || 'Progress updated'}</div>
+                              <div className="text-muted">
+                                {formatUpdatedBy(latest.updatedBy)} • {new Date(latest.updatedAt).toLocaleString('en-IN')}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td>{new Date(app.applicationDate).toLocaleDateString()}</td>
                     </tr>
@@ -473,8 +697,9 @@ const AdminDashboard = () => {
                   <tr>
                     <th>{t('admin.worker')}</th>
                     <th>{t('admin.employer')}</th>
-                    <th>{t('admin.amount')}</th>
+                    <th>Gross Amount</th>
                     <th>{t('admin.platformFee')}</th>
+                    <th>Net to Worker</th>
                     <th>{t('common.status')}</th>
                     <th>{t('common.date')}</th>
                     <th>{t('common.actions')}</th>
@@ -487,6 +712,7 @@ const AdminDashboard = () => {
                       <td>{payment.employerId?.userId?.name || 'N/A'}</td>
                       <td>₹{payment.amount}</td>
                       <td>₹{payment.platformFee || 0}</td>
+                      <td>₹{payment.netAmount || 0}</td>
                       <td>
                         <Badge bg={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'info'}>
                           {payment.status}
@@ -505,6 +731,315 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        {/* Assignment Tab */}
+        <Tab eventKey="assignment" title={`Worker Assignment (${assignmentJobs.length})`}>
+          <Card className="border-0 shadow-sm rounded-4 mb-4">
+            <Card.Body>
+              <div className="alert alert-primary small">
+                <strong>Admin Assignment Steps:</strong> 1) Get Matches करें 2) Select workers करें 3) Assign Selected दबाएँ.
+                अगर जल्दी assign करना है तो <strong>Auto Assign</strong> use करें.
+              </div>
+              <h5 className="mb-3">Job wise worker requirement & assignment</h5>
+              <Table responsive hover className="align-middle">
+                <thead>
+                  <tr>
+                    <th>Job</th>
+                    <th>Employer</th>
+                    <th>Location / Address</th>
+                    <th>Contact</th>
+                    <th>Required</th>
+                    <th>Assigned</th>
+                    <th>Need More</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignmentJobs.map((job) => (
+                    <tr key={job._id}>
+                      <td>
+                        <div className="fw-semibold">{job.title}</div>
+                        <small className="text-muted">{job.workType?.replace('_', ' ')}</small>
+                      </td>
+                      <td>
+                        {job.employerId?.companyName || job.employerId?.userId?.name || 'N/A'}
+                        <div className="small text-muted">{job.employerId?.userId?.phone || ''}</div>
+                      </td>
+                      <td>
+                        <div className="small">{job.location?.district || '-'}, {job.location?.state || '-'}</div>
+                        <div className="small text-muted">{job.location?.address || job.jobProviderContact?.address || '-'}</div>
+                      </td>
+                      <td>{job.jobProviderContact?.phone || job.employerId?.userId?.phone || '-'}</td>
+                      <td>{job.requiredWorkers}</td>
+                      <td>{job.assignedWorkers}</td>
+                      <td>
+                        <Badge bg={job.neededWorkers > 0 ? 'warning' : 'success'}>
+                          {job.neededWorkers}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={() => handleLoadSuggestions(job._id)}
+                          disabled={loadingSuggestionsByJob[job._id] || job.neededWorkers === 0}
+                          className="me-2"
+                        >
+                          {loadingSuggestionsByJob[job._id] ? 'Loading...' : '1) Get Matches'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline-success"
+                          onClick={() => handleAutoMatchAndAssign(job)}
+                          disabled={assigningJobId === job._id || job.neededWorkers === 0}
+                          className="me-2"
+                        >
+                          {assigningJobId === job._id ? 'Auto Assigning...' : `Auto Assign ${job.neededWorkers} Workers`}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleAssignWorkers(job)}
+                          disabled={assigningJobId === job._id || job.neededWorkers === 0}
+                        >
+                          {assigningJobId === job._id ? 'Assigning...' : `3) Assign Selected (max ${job.neededWorkers})`}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              {assignmentJobs.map((job) => {
+                const suggestions = suggestionsByJob[job._id] || [];
+                if (!suggestions.length) return null;
+
+                const selected = selectedWorkersByJob[job._id] || [];
+                const maxAllowed = Number(job.neededWorkers) || 0;
+
+                return (
+                  <Card key={`${job._id}-suggestions`} className="mb-3 border">
+                    <Card.Body>
+                      <h6 className="mb-2">Suggested workers for: {job.title}</h6>
+                      <div className="small text-muted mb-2">
+                        2) Select exactly up to {maxAllowed} worker(s). Selected: {selected.length}
+                      </div>
+                      <Row className="g-2">
+                        {suggestions.map((worker) => (
+                          <Col md={6} lg={4} key={worker._id}>
+                            <Form.Check
+                              type="checkbox"
+                              id={`${job._id}-${worker._id}`}
+                              label={`${worker.userId?.name || 'Worker'} • Rating ${worker.averageRating?.toFixed?.(1) || '0'} • Exp ${worker.experience || 0}y`}
+                              checked={selected.includes(worker._id)}
+                              disabled={!selected.includes(worker._id) && selected.length >= maxAllowed}
+                              onChange={() => toggleWorkerSelection(job._id, worker._id)}
+                            />
+                          </Col>
+                        ))}
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                );
+              })}
+            </Card.Body>
+          </Card>
+
+          <Card className="border-0 shadow-sm rounded-4">
+            <Card.Body>
+              <h5 className="mb-3">Coordination groups & payment status</h5>
+              <Table responsive hover className="align-middle">
+                <thead>
+                  <tr>
+                    <th>Job</th>
+                    <th>Employer</th>
+                    <th>Workers</th>
+                    <th>Work (Auto)</th>
+                    <th>Payment (Auto)</th>
+                    <th>Payment Split</th>
+                    <th>Progress Timeline</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignmentGroups.map((group) => (
+                    <tr key={group._id}>
+                      <td>
+                        {group.jobId?.title || 'N/A'}
+                        <div className="small text-muted">
+                          {group.jobId?.startDate && group.jobId?.endDate
+                            ? `${new Date(group.jobId.startDate).toLocaleDateString('en-IN')} - ${new Date(group.jobId.endDate).toLocaleDateString('en-IN')}`
+                            : 'Duration not set'}
+                        </div>
+                      </td>
+                      <td>{group.employerId?.userId?.name || group.employerId?.companyName || 'N/A'}</td>
+                      <td>
+                        {(group.assignedWorkerIds || []).length}/{group.requiredWorkers}
+                        <div className="small text-muted">
+                          {(group.assignedWorkerIds || []).map((w) => w.userId?.name).filter(Boolean).join(', ')}
+                        </div>
+                      </td>
+                      <td>
+                        <Badge bg={group.autoWorkStatus === 'completed' ? 'success' : group.autoWorkStatus === 'ongoing' ? 'info' : 'secondary'}>
+                          {group.autoWorkStatus || 'pending'}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Badge bg={group.autoPaymentStatus === 'distributed_to_workers' ? 'success' : group.autoPaymentStatus === 'received_on_platform' ? 'primary' : group.autoPaymentStatus === 'awaiting_employer_payment' ? 'warning' : 'secondary'}>
+                          {group.autoPaymentStatus || 'not_due'}
+                        </Badge>
+                      </td>
+                      <td style={{ minWidth: 170 }}>
+                        <div className="small">Platform Fee (Auto): <strong>₹20</strong></div>
+                        <div className="small">Gross/Worker: <strong>₹{group.paymentPerWorker || 0}</strong></div>
+                        <div className="small">Net/Worker: <strong>₹{Math.max(0, Number(group.paymentPerWorker || 0) - 20)}</strong></div>
+                      </td>
+                      <td style={{ minWidth: 260 }}>
+                        <div className="mb-2 d-flex flex-wrap gap-2">
+                          <Button size="sm" variant="outline-primary" onClick={() => openGroupChat(group.jobId?._id)}>
+                            Group Chat
+                          </Button>
+                          {group.employerId?.userId?._id && (
+                            <Button as={Link} size="sm" variant="outline-info" to={`/messages/${group.employerId.userId._id}`}>
+                              Private Msg Employer
+                            </Button>
+                          )}
+                          {group.employerId?.userId?.phone && (
+                            <Button size="sm" variant="outline-success" href={`tel:${group.employerId.userId.phone}`}>
+                              Call Employer
+                            </Button>
+                          )}
+                        </div>
+                        {!(group.recentUpdates || []).length ? (
+                          <div className="small text-muted">No timeline updates yet</div>
+                        ) : (
+                          (group.recentUpdates || []).slice(0, 3).map((update, idx) => (
+                            <div key={`${group._id}-timeline-${idx}`} className="d-flex align-items-start mb-2">
+                              <div className="me-2 mt-1" style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#0d6efd' }} />
+                              <div className="small">
+                                <div className="fw-semibold">{update.progressPercent || 0}% • {update.note || 'Progress updated'}</div>
+                                <div className="text-muted">{(update.updatedBy || 'system').toUpperCase()} • {new Date(update.updatedAt).toLocaleString('en-IN')}</div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        <Tab eventKey="messages" title={`Messages (${adminChats.length})${unreadMessages > 0 ? ` • ${unreadMessages} new` : ''}`}>
+          <Card className="border-0 shadow-sm rounded-4">
+            <Card.Body>
+              <div className="d-flex flex-wrap gap-2 mb-3">
+                <Button
+                  size="sm"
+                  variant={messageRoleFilter === 'all' ? 'primary' : 'outline-primary'}
+                  onClick={() => setMessageRoleFilter('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  size="sm"
+                  variant={messageRoleFilter === 'worker' ? 'info' : 'outline-info'}
+                  onClick={() => setMessageRoleFilter('worker')}
+                >
+                  Workers
+                </Button>
+                <Button
+                  size="sm"
+                  variant={messageRoleFilter === 'employer' ? 'warning' : 'outline-warning'}
+                  onClick={() => setMessageRoleFilter('employer')}
+                >
+                  Employers
+                </Button>
+                <Button
+                  size="sm"
+                  variant={messageRoleFilter === 'group' ? 'success' : 'outline-success'}
+                  onClick={() => setMessageRoleFilter('group')}
+                >
+                  Groups
+                </Button>
+              </div>
+
+              <Table responsive hover className="align-middle">
+                <thead>
+                  <tr>
+                    <th>Name / Group</th>
+                    <th>Role</th>
+                    <th>Last Message</th>
+                    <th>Last Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!filteredAdminChats.length ? (
+                    <tr>
+                      <td colSpan={5} className="text-center text-muted py-4">
+                        No messages in this tab.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAdminChats.map((chat) => {
+                      const other = getChatOtherUser(chat);
+                      let role = 'user';
+                      if (chat.chatType === 'group') role = 'group';
+                      else if (other?.userType) role = other.userType;
+                      else if (chat.workerId?.userType) role = chat.workerId.userType;
+                      else if (chat.employerId?.userType) role = chat.employerId.userType;
+                      let displayName = 'User';
+                      if (chat.chatType === 'group') displayName = chat.groupName || chat.jobId?.title || 'Support Group';
+                      else if (other?.name) displayName = other.name;
+                      else if (chat.workerId?.name) displayName = chat.workerId.name;
+                      else if (chat.employerId?.name) displayName = chat.employerId.name;
+
+                      return (
+                        <tr key={chat._id}>
+                          <td>
+                            <div className="fw-semibold">{displayName}</div>
+                            {chat.chatType === 'group' && chat.jobId?.title && (
+                              <div className="small text-muted">Job: {chat.jobId.title}</div>
+                            )}
+                            {chat.chatType !== 'group' && (!other?.name && (chat.workerId?.name || chat.employerId?.name)) && (
+                              <div className="small text-muted">{chat.workerId?.name || chat.employerId?.name}</div>
+                            )}
+                          </td>
+                          <td>
+                            <Badge bg={role === 'worker' ? 'info' : role === 'employer' ? 'warning' : role === 'group' ? 'success' : 'secondary'}>
+                              {role.charAt(0).toUpperCase() + role.slice(1)}
+                            </Badge>
+                          </td>
+                          <td>{chat.lastMessage || 'No message yet'}</td>
+                          <td>{chat.lastMessageTime ? new Date(chat.lastMessageTime).toLocaleString('en-IN') : '-'}</td>
+                          <td>
+                            {chat.chatType === 'group' ? (
+                              <Button as={Link} size="sm" variant="outline-success" to={`/messages/group/${chat._id}`}>
+                                Open Group
+                              </Button>
+                            ) : (
+                              <Button
+                                as={Link}
+                                size="sm"
+                                variant="outline-primary"
+                                to={`/messages/${other?._id || chat.workerId?._id || chat.employerId?._id || ''}`}
+                                disabled={!(other?._id || chat.workerId?._id || chat.employerId?._id)}
+                              >
+                                Open Chat
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </Table>
             </Card.Body>

@@ -29,8 +29,13 @@ const jobSchema = new mongoose.Schema({
     village: String,
     district: String,
     state: String,
+    address: String,
     latitude: Number,
     longitude: Number,
+  },
+  jobProviderContact: {
+    phone: String,
+    address: String,
   },
   salary: {
     amount: Number,
@@ -61,7 +66,7 @@ const jobSchema = new mongoose.Schema({
   },
   isApproved: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,

@@ -5,6 +5,57 @@ const Worker = require('../models/Worker');
 const razorpay = require('../utils/razorpay');
 const crypto = require('crypto');
 
+const FIXED_PLATFORM_FEE = 20;
+
+const autoTransitionByEndDate = async (payment) => {
+  if (!payment || payment.status !== 'advance_paid') return false;
+
+  const application = payment.applicationId;
+  const endDate = application?.jobId?.endDate;
+
+  if (!application || application.status !== 'accepted' || !endDate) return false;
+
+  const now = new Date();
+  if (now < new Date(endDate)) return false;
+
+  await Application.findByIdAndUpdate(
+    application._id,
+    {
+      status: 'completed',
+      completionDate: now,
+      $push: {
+        progressUpdates: {
+          progressPercent: 100,
+          note: 'Work auto-completed as assigned end date reached',
+          updatedBy: 'admin',
+          updatedAt: now,
+        },
+      },
+    }
+  );
+
+  await Payment.findByIdAndUpdate(payment._id, {
+    status: 'pending',
+    employerFinalPaymentDate: now,
+  });
+
+  await Application.findByIdAndUpdate(
+    application._id,
+    {
+      $push: {
+        progressUpdates: {
+          progressPercent: 100,
+          note: 'Payment auto-moved to platform after work end date',
+          updatedBy: 'admin',
+          updatedAt: now,
+        },
+      },
+    }
+  );
+
+  return true;
+};
+
 // Create Advance Payment (Employer)
 exports.createAdvancePayment = async (req, res) => {
   try {
@@ -49,7 +100,7 @@ exports.createAdvancePayment = async (req, res) => {
 
     // Calculate fees and commission
     const normalizedAmount = Number(amount);
-    const platformFee = Math.round(normalizedAmount * 0.05); // 5% platform fee
+    const platformFee = Math.min(FIXED_PLATFORM_FEE, normalizedAmount);
     const platformCommission = 0;
     const netAmount = normalizedAmount - platformFee - platformCommission;
 
@@ -72,7 +123,18 @@ exports.createAdvancePayment = async (req, res) => {
     });
 
     // Update application status
-    await Application.findByIdAndUpdate(applicationId, { status: 'accepted', startDate: new Date() });
+    await Application.findByIdAndUpdate(applicationId, {
+      status: 'accepted',
+      startDate: new Date(),
+      $push: {
+        progressUpdates: {
+          progressPercent: 60,
+          note: 'Employer paid advance on platform',
+          updatedBy: 'employer',
+          updatedAt: new Date(),
+        },
+      },
+    });
 
     res.status(201).json({
       message: 'Advance payment created successfully',
@@ -120,9 +182,10 @@ exports.releasePayment = async (req, res) => {
 
     const updatedPayment = await Payment.findByIdAndUpdate(
       paymentId,
-      { 
-        status: 'pending',
+      {
+        status: 'completed',
         employerFinalPaymentDate: new Date(),
+        completionPaymentDate: new Date(),
       },
       { new: true }
     );
@@ -130,11 +193,22 @@ exports.releasePayment = async (req, res) => {
     // Update application status
     await Application.findByIdAndUpdate(
       payment.applicationId,
-      { status: 'completed', completionDate: new Date() }
+      {
+        status: 'completed',
+        completionDate: new Date(),
+        $push: {
+          progressUpdates: {
+            progressPercent: 100,
+            note: 'Final payment released by employer',
+            updatedBy: 'employer',
+            updatedAt: new Date(),
+          },
+        },
+      }
     );
 
     res.status(200).json({
-      message: 'Final payment received on platform. Admin will release it to worker shortly.',
+      message: 'Final payment released to worker successfully.',
       payment: updatedPayment,
     });
   } catch (error) {
@@ -166,6 +240,20 @@ exports.adminReleaseToWorker = async (req, res) => {
       { new: true }
     );
 
+    await Application.findByIdAndUpdate(
+      payment.applicationId,
+      {
+        $push: {
+          progressUpdates: {
+            progressPercent: 100,
+            note: 'Admin released platform payment to worker',
+            updatedBy: 'admin',
+            updatedAt: new Date(),
+          },
+        },
+      }
+    );
+
     return res.status(200).json({
       message: 'Payment released to worker successfully by admin',
       payment: updatedPayment,
@@ -190,18 +278,35 @@ exports.getWorkerPayments = async (req, res) => {
         select: 'jobId status completionDate',
         populate: {
           path: 'jobId',
-          select: 'title',
+          select: 'title startDate endDate',
         },
       })
       .populate('employerId', 'companyName')
       .sort({ createdAt: -1 });
 
-    const totalEarned = payments
+    const autoUpdated = await Promise.all(payments.map((payment) => autoTransitionByEndDate(payment)));
+    const shouldRefetch = autoUpdated.some(Boolean);
+
+    const finalPayments = shouldRefetch
+      ? await Payment.find({ workerId: worker._id })
+        .populate({
+          path: 'applicationId',
+          select: 'jobId status completionDate',
+          populate: {
+            path: 'jobId',
+            select: 'title startDate endDate',
+          },
+        })
+        .populate('employerId', 'companyName')
+        .sort({ createdAt: -1 })
+      : payments;
+
+    const totalEarned = finalPayments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.netAmount, 0);
 
     res.status(200).json({
-      payments,
+      payments: finalPayments,
       totalEarnings: totalEarned,
       totalEarned,
     });
@@ -260,7 +365,7 @@ exports.getEmployerPayments = async (req, res) => {
         select: 'status attendanceCount completionDate jobId',
         populate: {
           path: 'jobId',
-          select: 'title',
+          select: 'title startDate endDate',
         },
       })
       .populate({
@@ -273,12 +378,36 @@ exports.getEmployerPayments = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    const totalPaid = payments
+    const autoUpdated = await Promise.all(payments.map((payment) => autoTransitionByEndDate(payment)));
+    const shouldRefetch = autoUpdated.some(Boolean);
+
+    const finalPayments = shouldRefetch
+      ? await Payment.find({ employerId: employer._id })
+        .populate({
+          path: 'applicationId',
+          select: 'status attendanceCount completionDate jobId',
+          populate: {
+            path: 'jobId',
+            select: 'title startDate endDate',
+          },
+        })
+        .populate({
+          path: 'workerId',
+          select: 'skills experience userId',
+          populate: {
+            path: 'userId',
+            select: 'name phone',
+          },
+        })
+        .sort({ createdAt: -1 })
+      : payments;
+
+    const totalPaid = finalPayments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0);
 
     res.status(200).json({
-      payments,
+      payments: finalPayments,
       totalPaid,
     });
   } catch (error) {
@@ -511,7 +640,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     // Calculate fees
     const normalizedAmount = Number(amount);
-    const platformFee = Math.round(normalizedAmount * 0.05); // 5% platform fee
+    const platformFee = Math.min(FIXED_PLATFORM_FEE, normalizedAmount);
     const netAmount = normalizedAmount - platformFee;
 
     // Create payment record
@@ -536,7 +665,15 @@ exports.verifyRazorpayPayment = async (req, res) => {
     // Update application
     await Application.findByIdAndUpdate(applicationId, { 
       status: 'accepted', 
-      startDate: new Date() 
+      startDate: new Date(),
+      $push: {
+        progressUpdates: {
+          progressPercent: 60,
+          note: 'Advance payment successful on platform',
+          updatedBy: 'employer',
+          updatedAt: new Date(),
+        },
+      },
     });
 
     res.status(201).json({

@@ -125,7 +125,7 @@ const JobList = () => {
                       </Card.Title>
 
                       <p className="text-muted small mb-3">
-                        🏢 {job.employer?.companyName || 'Company'}
+                        🏢 {job.employerId?.companyName || 'Company'}
                       </p>
 
                       <div className="mb-3 d-flex flex-wrap gap-2">
@@ -135,6 +135,11 @@ const JobList = () => {
                         <Badge bg="info" className="px-3 py-2">
                           📍 {job.location?.district || job.location}
                         </Badge>
+                        {job.startDate && job.endDate && (
+                          <Badge bg="secondary" className="px-3 py-2">
+                            📅 {new Date(job.startDate).toLocaleDateString('en-IN')} - {new Date(job.endDate).toLocaleDateString('en-IN')}
+                          </Badge>
+                        )}
                       </div>
 
                       <p className="small text-muted mb-3 flex-grow-1">

@@ -13,10 +13,14 @@ const PostJob = () => {
     village: '',
     district: '',
     state: '',
+    address: '',
+    contactPhone: '',
     amount: '',
     period: 'daily',
     numberOfPositions: 1,
     experienceRequired: 0,
+    startDate: '',
+    endDate: '',
     startTime: '',
     endTime: '',
     accommodation: false,
@@ -42,6 +46,11 @@ const PostJob = () => {
           village: formData.village,
           district: formData.district,
           state: formData.state,
+          address: formData.address,
+        },
+        jobProviderContact: {
+          phone: formData.contactPhone,
+          address: formData.address,
         },
         salary: {
           amount: formData.amount,
@@ -49,6 +58,8 @@ const PostJob = () => {
         },
         numberOfPositions: formData.numberOfPositions,
         experienceRequired: formData.experienceRequired,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
         workingHours: {
           startTime: formData.startTime,
           endTime: formData.endTime,
@@ -170,6 +181,37 @@ const PostJob = () => {
                       </Form.Group>
                     </Col>
                   </Row>
+
+                  <Row>
+                    <Col xs={12} sm={8}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Address *</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          required
+                          placeholder="Complete काम का address"
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} sm={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Contact Phone *</Form.Label>
+                        <Form.Control
+                          type="tel"
+                          name="contactPhone"
+                          value={formData.contactPhone}
+                          onChange={handleChange}
+                          required
+                          placeholder="10-digit phone"
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </div>
 
                 <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
@@ -231,6 +273,39 @@ const PostJob = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+
+                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
+                  <h5 className="mb-3 fw-semibold">📅 Work Duration (Kab Se Kab Tak)</h5>
+                  <Row>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">Start Date *</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="startDate"
+                          value={formData.startDate}
+                          onChange={handleChange}
+                          required
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-semibold">End Date *</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="endDate"
+                          value={formData.endDate}
+                          onChange={handleChange}
+                          required
+                          min={formData.startDate || undefined}
+                          className="rounded-3"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </div>
 
                 <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
                   <h5 className="mb-3 fw-semibold">⏰ Working Hours</h5>

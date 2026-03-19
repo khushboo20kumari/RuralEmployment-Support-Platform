@@ -128,6 +128,19 @@ const JobDetails = () => {
                 </Col>
               </Row>
 
+              {(job.startDate || job.endDate) && (
+                <Row>
+                  <Col md={12}>
+                    <h6>{language === 'hi' ? 'काम की अवधि (कब से कब तक)' : 'Work Duration'}</h6>
+                    <p>
+                      {job.startDate ? new Date(job.startDate).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN') : '-'}
+                      {' '}→{' '}
+                      {job.endDate ? new Date(job.endDate).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN') : '-'}
+                    </p>
+                  </Col>
+                </Row>
+              )}
+
               {job.workingHours && (
                 <Row>
                   <Col md={12}>
@@ -161,15 +174,54 @@ const JobDetails = () => {
               <p><strong>कंपनी:</strong> {job.employerId?.companyName || 'जानकारी नहीं'}</p>
               <p><strong>संपर्क व्यक्ति:</strong> {job.employerId?.contactPerson || 'जानकारी नहीं'}</p>
               
-              {user && user.userType === 'worker' && job.jobStatus === 'open' && (
-                <Button 
-                  variant="primary" 
-                  className="w-100"
-                  onClick={() => setShowApplyModal(true)}
-                >
-                  अभी अर्ज़ी भेजें
-                </Button>
-              )}
+              <div className="d-grid gap-2">
+                {!user ? (
+                  // Not logged in
+                  <>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => {
+                        toast.info('अर्ज़ी भेजने के लिए लॉगिन करें');
+                        navigate('/login');
+                      }}
+                    >
+                      लॉगिन करके अर्ज़ी भेजें
+                    </Button>
+                    <Button 
+                      variant="outline-primary"
+                      onClick={() => {
+                        toast.info('नए उपयोगकर्ता के रूप में रजिस्टर करें');
+                        navigate('/register');
+                      }}
+                    >
+                      अब रजिस्टर करें
+                    </Button>
+                  </>
+                ) : user.userType === 'worker' ? (
+                  // Worker logged in
+                  <>
+                    {job.jobStatus === 'open' && (
+                      <Button 
+                        variant="primary" 
+                        onClick={() => setShowApplyModal(true)}
+                      >
+                        अभी अर्ज़ी भेजें
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline-success"
+                      onClick={() => navigate(`/messages/${job.employerId._id}`)}
+                    >
+                      💬 मालिक से पूछें
+                    </Button>
+                  </>
+                ) : (
+                  // Employer logged in
+                  <div className="alert alert-info">
+                    यह आपकी पोस्ट की गई नौकरी है
+                  </div>
+                )}
+              </div>
             </Card.Body>
           </Card>
         </Col>

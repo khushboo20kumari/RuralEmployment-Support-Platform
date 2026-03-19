@@ -55,6 +55,7 @@ app.use('/api/jobs', require('./routes/job.routes'));
 app.use('/api/applications', require('./routes/application.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
 app.use('/api/reviews', require('./routes/review.routes'));
+app.use('/api/messages', require('./routes/message.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
 // Basic route

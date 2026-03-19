@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { jobAPI, employerAPI } from '../services/api';
+import { jobAPI, employerAPI, messageAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import SimpleBarChart from '../components/SimpleBarChart';
 
 const EmployerDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState({ jobs: 0, workersHired: 0, activeJobs: 0, pendingApproval: 0 });
+  const [stats, setStats] = useState({ jobs: 0, workersHired: 0, activeJobs: 0, closedJobs: 0 });
   const [myJobs, setMyJobs] = useState([]);
-  const [filter, setFilter] = useState('all'); // all, approved, pending, closed
+  const [profile, setProfile] = useState(null);
+  const [assignmentGroups, setAssignmentGroups] = useState([]);
+  const [filter, setFilter] = useState('all'); // all, open, closed
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
@@ -20,19 +24,31 @@ const EmployerDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [jobsRes, profileRes] = await Promise.all([
+      const [jobsRes, profileRes, assignmentRes] = await Promise.all([
         jobAPI.getMyJobs(),
         employerAPI.getProfile(),
+        employerAPI.getAssignmentGroups(),
       ]);
 
       const jobs = jobsRes.data.jobs;
+      const employerProfile = profileRes.data.employer;
+      const groups = assignmentRes.data.groups || [];
       setMyJobs(jobs);
+      setProfile(employerProfile);
+      setAssignmentGroups(groups);
       setStats({
         jobs: jobs.length,
-        workersHired: profileRes.data.employer.workersHired || 0,
-        activeJobs: jobs.filter(j => j.jobStatus === 'open' && j.isApproved).length,
-        pendingApproval: jobs.filter(j => !j.isApproved).length,
+        workersHired: employerProfile.workersHired || 0,
+        activeJobs: jobs.filter(j => j.jobStatus === 'open').length,
+        closedJobs: jobs.filter(j => j.jobStatus === 'closed').length,
       });
+
+      try {
+        const unreadRes = await messageAPI.getUnreadCount();
+        setUnreadCount(Number(unreadRes.data?.unreadCount || 0));
+      } catch (e) {
+        setUnreadCount(0);
+      }
     } catch (error) {
       toast.error('Failed to load dashboard');
     } finally {
@@ -42,14 +58,26 @@ const EmployerDashboard = () => {
 
   const getFilteredJobs = () => {
     switch (filter) {
-      case 'approved':
-        return myJobs.filter(j => j.isApproved);
-      case 'pending':
-        return myJobs.filter(j => !j.isApproved);
+      case 'open':
+        return myJobs.filter(j => j.jobStatus === 'open');
       case 'closed':
         return myJobs.filter(j => j.jobStatus === 'closed');
       default:
         return myJobs;
+    }
+  };
+
+  const openGroupChat = async (jobId) => {
+    try {
+      const response = await messageAPI.getOrCreateJobGroup(jobId);
+      const groupChatId = response.data?.chat?._id;
+      if (!groupChatId) {
+        toast.error('Group chat not available');
+        return;
+      }
+      navigate(`/messages/group/${groupChatId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to open group chat');
     }
   };
 
@@ -91,7 +119,7 @@ const EmployerDashboard = () => {
                 <div className="fs-1 me-3">🏢</div>
                 <div>
                   <h2 className="mb-1 text-white fw-bold">Employer Dashboard</h2>
-                  <p className="mb-0 text-white-50">Manage jobs, monitor approvals, and track workforce progress.</p>
+                  <p className="mb-0 text-white-50">Manage jobs, post publicly, and track workforce progress.</p>
                 </div>
               </div>
             </Col>
@@ -132,9 +160,9 @@ const EmployerDashboard = () => {
             background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
           }}>
             <Card.Body className="text-center p-4">
-              <div className="fs-2 mb-3">✅</div>
+              <div className="fs-2 mb-3">📢</div>
               <h3 className="text-success fw-bold mb-2">{stats.activeJobs}</h3>
-              <p className="text-dark fw-semibold small mb-0">Active & Approved</p>
+              <p className="text-dark fw-semibold small mb-0">Public Open Jobs</p>
             </Card.Body>
           </Card>
         </Col>
@@ -145,9 +173,9 @@ const EmployerDashboard = () => {
             background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
           }}>
             <Card.Body className="text-center p-4">
-              <div className="fs-2 mb-3">⏳</div>
-              <h3 className="text-warning fw-bold mb-2">{stats.pendingApproval}</h3>
-              <p className="text-dark fw-semibold small mb-0">Pending Approval</p>
+              <div className="fs-2 mb-3">🔒</div>
+              <h3 className="text-warning fw-bold mb-2">{stats.closedJobs}</h3>
+              <p className="text-dark fw-semibold small mb-0">Closed Jobs</p>
             </Card.Body>
           </Card>
         </Col>
@@ -173,11 +201,116 @@ const EmployerDashboard = () => {
             title="📈 Job Status Chart"
             data={[
               { label: 'Total Jobs', value: stats.jobs, color: '#5B8DEE' },
-              { label: 'Active Jobs', value: stats.activeJobs, color: '#10b981' },
-              { label: 'Pending Approval', value: stats.pendingApproval, color: '#f59e0b' },
+              { label: 'Public Open Jobs', value: stats.activeJobs, color: '#10b981' },
+              { label: 'Closed Jobs', value: stats.closedJobs, color: '#f59e0b' },
               { label: 'Workers Hired', value: stats.workersHired, color: '#0ea5e9' },
             ]}
           />
+        </Card.Body>
+      </Card>
+
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h5 className="mb-1 fw-bold">👤 Company Profile</h5>
+              <p className="text-muted mb-0">
+                {profile?.companyName || user?.name || 'Employer'} • {profile?.companyType || 'Business'}
+              </p>
+            </div>
+            <div className="d-flex gap-2 flex-wrap">
+              <Button as={Link} to="/messages" variant="outline-info">
+                💬 Messages {unreadCount > 0 ? `(${unreadCount})` : ''}
+              </Button>
+              <Button as={Link} to="/profile" variant="outline-primary">Update Profile</Button>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
+      <Card className="border-0 rounded-4 mb-4">
+        <Card.Body className="p-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="mb-0 fw-bold">👥 Assigned Worker Groups</h5>
+            <Button as={Link} to="/employer/payments" variant="outline-success" size="sm">
+              💳 Open Payments
+            </Button>
+          </div>
+
+          {assignmentGroups.length === 0 ? (
+            <div className="text-muted">No admin assignment group created yet for your jobs.</div>
+          ) : (
+            assignmentGroups.map((group) => (
+              <Card key={group._id} className="border rounded-3 mb-3">
+                <Card.Body>
+                  <Row className="g-3">
+                    <Col md={4}>
+                      <div className="fw-semibold">{group.jobId?.title || 'Job'}</div>
+                      <div className="small text-muted text-capitalize">
+                        {(group.jobId?.workType || '').replace('_', ' ')}
+                      </div>
+                      <div className="small mt-2">
+                        <Badge bg="info" className="me-2">Assigned {group.progress?.assignedWorkers || 0}/{group.requiredWorkers}</Badge>
+                        <Badge bg={(group.progress?.pendingPayments || 0) > 0 ? 'warning' : 'success'}>
+                          {(group.progress?.pendingPayments || 0) > 0 ? 'Payment Pending' : 'Payments Updated'}
+                        </Badge>
+                      </div>
+                    </Col>
+
+                    <Col md={4}>
+                      <div className="small text-muted mb-1">Assigned Workers</div>
+                      <div className="small">
+                        {(group.assignedWorkerIds || []).length > 0
+                          ? group.assignedWorkerIds.map((w) => w.userId?.name).filter(Boolean).join(', ')
+                          : 'No worker names available'}
+                      </div>
+                    </Col>
+
+                    <Col md={4}>
+                      <div className="small">Accepted: <strong>{group.progress?.acceptedApplications || 0}</strong></div>
+                      <div className="small">Completed Work: <strong>{group.progress?.completedApplications || 0}</strong></div>
+                      <div className="small">
+                        Duration: <strong>
+                          {group.jobId?.startDate ? new Date(group.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                          {' '}to{' '}
+                          {group.jobId?.endDate ? new Date(group.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                        </strong>
+                      </div>
+                      <div className="small">Pending Platform Payments: <strong>{group.progress?.pendingPayments || 0}</strong></div>
+                      <div className="small">Completed Worker Payouts: <strong>{group.progress?.completedPayments || 0}</strong></div>
+                      <div className="small">Work Status: <strong>{group.autoWorkStatus || 'pending'}</strong></div>
+                      <div className="small">Payment Status: <strong>{group.autoPaymentStatus || 'not_due'}</strong></div>
+                      <div className="small">Per Worker Payment: <strong>₹{group.paymentPerWorker || 0}</strong></div>
+                      <div className="small">Total Platform Payment: <strong>₹{group.platformTotalPayment || 0}</strong></div>
+
+                      <div className="mt-2">
+                        <Button size="sm" variant="outline-primary" onClick={() => openGroupChat(group.jobId?._id)}>
+                          Group Chat (Admin + Workers)
+                        </Button>
+                      </div>
+
+                      <div className="p-2 rounded-3 bg-light border mt-2">
+                        <div className="fw-semibold small mb-2">📦 Timeline</div>
+                        {!(group.recentUpdates || []).length ? (
+                          <div className="small text-muted">No status updates yet.</div>
+                        ) : (
+                          (group.recentUpdates || []).slice(0, 3).map((update, idx) => (
+                            <div key={`${group._id}-timeline-${idx}`} className="d-flex align-items-start mb-2">
+                              <div className="me-2 mt-1" style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#0d6efd' }} />
+                              <div className="small">
+                                <div className="fw-semibold">{update.progressPercent || 0}% • {update.note || 'Progress updated'}</div>
+                                <div className="text-muted">{(update.updatedBy || 'system').toUpperCase()} • {new Date(update.updatedAt).toLocaleString('en-IN')}</div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ))
+          )}
         </Card.Body>
       </Card>
 
@@ -210,20 +343,12 @@ const EmployerDashboard = () => {
                   All ({myJobs.length})
                 </Button>
                 <Button 
-                  variant={filter === 'approved' ? 'success' : 'outline-success'} 
+                  variant={filter === 'open' ? 'success' : 'outline-success'} 
                   size="sm"
-                  onClick={() => setFilter('approved')}
+                  onClick={() => setFilter('open')}
                   className="rounded-pill px-3"
                 >
-                  ✓ Approved ({myJobs.filter(j => j.isApproved).length})
-                </Button>
-                <Button 
-                  variant={filter === 'pending' ? 'warning' : 'outline-warning'} 
-                  size="sm"
-                  onClick={() => setFilter('pending')}
-                  className="rounded-pill px-3"
-                >
-                  ⏳ Pending ({myJobs.filter(j => !j.isApproved).length})
+                  📢 Open ({myJobs.filter(j => j.jobStatus === 'open').length})
                 </Button>
                 <Button 
                   variant={filter === 'closed' ? 'danger' : 'outline-danger'} 
@@ -239,8 +364,7 @@ const EmployerDashboard = () => {
                 <div className="text-center py-5">
                   <div className="fs-1 mb-3">📭</div>
                   <p className="text-muted">
-                    {filter === 'pending' && 'No jobs pending approval'}
-                    {filter === 'approved' && 'No approved jobs'}
+                    {filter === 'open' && 'No open public jobs'}
                     {filter === 'closed' && 'No closed jobs'}
                     {filter === 'all' && 'No jobs posted yet'}
                   </p>
@@ -249,7 +373,7 @@ const EmployerDashboard = () => {
                 getFilteredJobs().map((job) => (
                   <Card key={job._id} className="border rounded-3 mb-3 hover-lift" style={{
                     transition: 'all 0.3s ease',
-                    borderLeft: '4px solid ' + (job.isApproved ? '#10b981' : '#f59e0b')
+                    borderLeft: '4px solid ' + (job.jobStatus === 'open' ? '#10b981' : '#f59e0b')
                   }}>
                     <Card.Body className="p-4">
                       <Row className="align-items-start">
@@ -259,15 +383,7 @@ const EmployerDashboard = () => {
                             <div>
                               <h5 className="mb-2 fw-bold text-dark">{job.title}</h5>
                               <div className="mb-2">
-                                {!job.isApproved ? (
-                                  <Badge bg="warning" text="dark" className="me-2 px-3 py-2">
-                                    ⏳ Pending Admin Approval
-                                  </Badge>
-                                ) : (
-                                  <Badge bg="success" className="me-2 px-3 py-2">
-                                    ✓ Approved
-                                  </Badge>
-                                )}
+                                <Badge bg="success" className="me-2 px-3 py-2">🌐 Public Job</Badge>
                                 <Badge bg={job.jobStatus === 'open' ? 'info' : 'secondary'} className="px-3 py-2">
                                   {job.jobStatus === 'open' ? '🟢 Open' : '🔴 Closed'}
                                 </Badge>

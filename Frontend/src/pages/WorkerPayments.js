@@ -9,6 +9,14 @@ const WorkerPayments = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const totalPlatformFee = payments
+    .filter((p) => p.status === 'completed')
+    .reduce((sum, p) => sum + (p.platformFee || 0), 0);
+
+  const totalGrossAmount = payments
+    .filter((p) => p.status === 'completed')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -52,6 +60,9 @@ const WorkerPayments = () => {
       <Card className="mb-4">
         <Card.Body>
           <h4 className="mb-0">Total Amount Received: ₹{totalEarnings}</h4>
+          <div className="small text-muted mt-2">
+            Gross Paid: ₹{totalGrossAmount} • Platform Fee (Auto ₹20 per payment): ₹{totalPlatformFee} • Net to Worker: ₹{totalEarnings}
+          </div>
         </Card.Body>
       </Card>
 
@@ -64,8 +75,9 @@ const WorkerPayments = () => {
               <thead>
                 <tr>
                   <th>Job</th>
-                  <th>Amount</th>
-                  <th>Net Amount</th>
+                  <th>Gross Amount</th>
+                  <th>Platform Fee</th>
+                  <th>Net to Worker</th>
                   <th>Method</th>
                   <th>Status</th>
                   <th>Date</th>
@@ -77,6 +89,7 @@ const WorkerPayments = () => {
                   <tr key={payment._id}>
                     <td>{payment.applicationId?.jobId?.title || 'Job'}</td>
                     <td>₹{payment.amount}</td>
+                    <td>₹{payment.platformFee || 0}</td>
                     <td>₹{payment.netAmount || 0}</td>
                     <td>{payment.paymentMethod?.replace('_', ' ') || 'Not available'}</td>
                     <td>
@@ -84,7 +97,7 @@ const WorkerPayments = () => {
                         {payment.status === 'completed'
                           ? 'Received'
                           : payment.status === 'pending'
-                          ? 'Admin Release Pending'
+                          ? 'Release Pending'
                           : 'In Process'}
                       </Badge>
                     </td>

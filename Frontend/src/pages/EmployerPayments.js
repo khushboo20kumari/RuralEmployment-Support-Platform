@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Card, Table, Form, Button, Badge, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { paymentAPI, applicationAPI } from '../services/api';
+import { paymentAPI } from '../services/api';
 
 const EmployerPayments = () => {
   const [eligibleApplications, setEligibleApplications] = useState([]);
@@ -10,12 +10,13 @@ const EmployerPayments = () => {
   const [methodByApp, setMethodByApp] = useState({});
   const [txnByApp, setTxnByApp] = useState({});
   const [payingAppId, setPayingAppId] = useState(null);
-  const [releasingPaymentId, setReleasingPaymentId] = useState(null);
-  const [completingAppId, setCompletingAppId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [razorpayReady, setRazorpayReady] = useState(false);
 
   const pendingReleasePayments = payments.filter((payment) => payment.status === 'advance_paid');
+  const platformPendingPayments = payments.filter((payment) => payment.status === 'pending');
+  const totalPlatformFee = payments.reduce((sum, payment) => sum + (payment.platformFee || 0), 0);
+  const totalWorkerNet = payments.reduce((sum, payment) => sum + (payment.netAmount || 0), 0);
 
   useEffect(() => {
     fetchData();
@@ -156,36 +157,6 @@ const EmployerPayments = () => {
     }
   };
 
-  const handleRelease = async (paymentId) => {
-    if (!window.confirm('Are you sure you want to release the final payment to the platform?')) return;
-
-    try {
-      setReleasingPaymentId(paymentId);
-      await paymentAPI.releasePayment(paymentId);
-      toast.success('Final payment received by platform. Admin will release to worker soon.');
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to release final payment');
-    } finally {
-      setReleasingPaymentId(null);
-    }
-  };
-
-  const handleMarkWorkCompleted = async (applicationId) => {
-    if (!window.confirm('Mark this job as completed? This will enable final payment release.')) return;
-
-    try {
-      setCompletingAppId(applicationId);
-      await applicationAPI.employerComplete(applicationId);
-      toast.success('Job marked as completed. You can now release final payment.');
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to mark work completed');
-    } finally {
-      setCompletingAppId(null);
-    }
-  };
-
   if (loading) {
     return (
       <Container className="my-5 text-center">
@@ -198,8 +169,17 @@ const EmployerPayments = () => {
     <Container className="my-5">
       <h2 className="mb-4">💰 Payments</h2>
 
+      <Card className="mb-4">
+        <Card.Body>
+          <div className="fw-semibold">Payment Summary</div>
+          <div className="small text-muted mt-1">
+            Gross Paid: ₹{payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)} • Platform Fee (Auto ₹20 per payment): ₹{totalPlatformFee} • Net to Workers: ₹{totalWorkerNet}
+          </div>
+        </Card.Body>
+      </Card>
+
       <Alert variant="info">
-        <strong>Payment Flow:</strong> Step 1: Accept Application → Step 2: Give Advance Payment → Step 3: Worker Completes Job → <strong>Step 4: Release Final Payment Here</strong> → Step 5: Admin releases to Worker
+        <strong>Payment Flow:</strong> Step 1: Assign/Accept Work → Step 2: Give Advance Payment → Step 3: On work end date, payment auto moves to platform → Step 4: Admin releases to worker
       </Alert>
 
       <Card className="mb-4">
@@ -272,10 +252,10 @@ const EmployerPayments = () => {
 
       <Card className="mb-4 border-success">
         <Card.Body>
-          <h5 className="mb-3">✅ Final Payment Ready (After Job Completion)</h5>
+          <h5 className="mb-3">✅ Auto Move to Platform (By Assigned End Date)</h5>
           {pendingReleasePayments.length === 0 ? (
             <Alert variant="warning" className="mb-0">
-              No advance-paid applications yet. First, make an advance payment above. Then after worker completes the job, the final payment button will appear here.
+              No advance-paid applications yet. First, make an advance payment above.
             </Alert>
           ) : (
             <>
@@ -284,9 +264,12 @@ const EmployerPayments = () => {
                 <tr>
                   <th>Worker Name</th>
                   <th>Job Title</th>
+                  <th>Assigned Duration</th>
                   <th>Job Status</th>
-                  <th>Amount (₹)</th>
-                  <th>Action</th>
+                  <th>Gross (₹)</th>
+                  <th>Platform Fee (₹)</th>
+                  <th>Net to Worker (₹)</th>
+                  <th>Auto Transition</th>
                 </tr>
               </thead>
               <tbody>
@@ -297,32 +280,23 @@ const EmployerPayments = () => {
                       <td>{payment.workerId?.userId?.name || 'N/A'}</td>
                       <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
                       <td>
+                        {payment.applicationId?.jobId?.startDate ? new Date(payment.applicationId.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                        {' '}to{' '}
+                        {payment.applicationId?.jobId?.endDate ? new Date(payment.applicationId.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                      </td>
+                      <td>
                         <Badge bg={jobCompleted ? 'success' : 'warning'}>
                           {jobCompleted ? '✓ Completed' : '⏳ In Progress'}
                         </Badge>
                       </td>
                       <td>₹{payment.amount}</td>
+                      <td>₹{payment.platformFee || 0}</td>
+                      <td>₹{payment.netAmount || 0}</td>
                       <td>
                         {jobCompleted ? (
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={() => handleRelease(payment._id)}
-                            disabled={releasingPaymentId === payment._id}
-                            title="Click to release final payment"
-                          >
-                            {releasingPaymentId === payment._id ? 'Releasing...' : 'Release Final Payment'}
-                          </Button>
+                          <Badge bg="info">Moved to platform</Badge>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => handleMarkWorkCompleted(payment.applicationId?._id)}
-                            disabled={completingAppId === payment.applicationId?._id}
-                            title="Mark work as completed to enable final release"
-                          >
-                            {completingAppId === payment.applicationId?._id ? 'Marking...' : 'Mark Work Completed'}
-                          </Button>
+                          <span className="small text-muted">Will auto move on end date</span>
                         )}
                       </td>
                     </tr>
@@ -339,41 +313,63 @@ const EmployerPayments = () => {
                     <Card.Body>
                       <div className="mb-2"><strong>Worker:</strong> {payment.workerId?.userId?.name || 'N/A'}</div>
                       <div className="mb-2"><strong>Job:</strong> {payment.applicationId?.jobId?.title || 'N/A'}</div>
+                      <div className="mb-2">
+                        <strong>Duration:</strong>{' '}
+                        {payment.applicationId?.jobId?.startDate ? new Date(payment.applicationId.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                        {' '}to{' '}
+                        {payment.applicationId?.jobId?.endDate ? new Date(payment.applicationId.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                      </div>
                       <div className="mb-3">
                         <Badge bg={jobCompleted ? 'success' : 'warning'}>
                           {jobCompleted ? '✓ Completed' : '⏳ In Progress'}
                         </Badge>
                       </div>
                       <div className="mb-3"><strong>Amount:</strong> ₹{payment.amount}</div>
-                      <Button
-                        className="w-100"
-                        size="sm"
-                        variant={jobCompleted ? 'success' : 'primary'}
-                        onClick={() =>
-                          jobCompleted
-                            ? handleRelease(payment._id)
-                            : handleMarkWorkCompleted(payment.applicationId?._id)
-                        }
-                        disabled={
-                          jobCompleted
-                            ? releasingPaymentId === payment._id
-                            : completingAppId === payment.applicationId?._id
-                        }
-                      >
-                        {jobCompleted
-                          ? releasingPaymentId === payment._id
-                            ? 'Releasing...'
-                            : 'Release Final Payment'
-                          : completingAppId === payment.applicationId?._id
-                          ? 'Marking...'
-                          : 'Mark Work Completed'}
-                      </Button>
+                      <div className="small text-muted">
+                        {jobCompleted ? 'Moved to platform' : 'Will auto move on end date'}
+                      </div>
                     </Card.Body>
                   </Card>
                 );
               })}
             </div>
             </>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Card className="mb-4 border-info">
+        <Card.Body>
+          <h5 className="mb-3">🏦 Payment on Platform (Admin Will Release)</h5>
+          {platformPendingPayments.length === 0 ? (
+            <p className="text-muted mb-0">No payment is currently pending on platform.</p>
+          ) : (
+            <Table responsive hover>
+              <thead>
+                <tr>
+                  <th>Worker Name</th>
+                  <th>Job Title</th>
+                  <th>Gross (₹)</th>
+                  <th>Platform Fee (₹)</th>
+                  <th>Net to Worker (₹)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {platformPendingPayments.map((payment) => (
+                  <tr key={`platform-${payment._id}`}>
+                    <td>{payment.workerId?.userId?.name || 'N/A'}</td>
+                    <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
+                    <td>₹{payment.amount}</td>
+                    <td>₹{payment.platformFee || 0}</td>
+                    <td>₹{payment.netAmount || 0}</td>
+                    <td>
+                      <Badge bg="info">On Platform • Waiting Admin Release</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           )}
         </Card.Body>
       </Card>
@@ -389,19 +385,20 @@ const EmployerPayments = () => {
                 <tr>
                   <th>Worker Details</th>
                   <th>Job Title</th>
+                  <th>Assigned Duration</th>
                   <th>Days Worked</th>
-                  <th>Amount (₹)</th>
+                  <th>Gross (₹)</th>
+                  <th>Platform Fee (₹)</th>
+                  <th>Net to Worker (₹)</th>
                   <th>Method</th>
                   <th>Payment Status</th>
                   <th>Job Status</th>
                   <th>Date</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {payments.map((payment) => {
                   const jobCompleted = payment.applicationId?.status === 'completed';
-                  const canRelease = payment.status === 'advance_paid' && jobCompleted;
                   return (
                     <tr key={payment._id}>
                       <td>
@@ -411,8 +408,15 @@ const EmployerPayments = () => {
                         </div>
                       </td>
                       <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
+                      <td>
+                        {payment.applicationId?.jobId?.startDate ? new Date(payment.applicationId.jobId.startDate).toLocaleDateString('en-IN') : '-'}
+                        {' '}to{' '}
+                        {payment.applicationId?.jobId?.endDate ? new Date(payment.applicationId.jobId.endDate).toLocaleDateString('en-IN') : '-'}
+                      </td>
                       <td>{payment.applicationId?.attendanceCount || 0} days</td>
                       <td>₹{payment.amount}</td>
+                      <td>₹{payment.platformFee || 0}</td>
+                      <td>₹{payment.netAmount || 0}</td>
                       <td>{payment.paymentMethod?.replace('_', ' ') || 'N/A'}</td>
                       <td>
                         <Badge
@@ -428,7 +432,7 @@ const EmployerPayments = () => {
                             ? '✓ Completed'
                             : payment.status === 'advance_paid'
                             ? 'Advance Paid'
-                            : 'Pending Admin Release'}
+                            : 'Pending Release'}
                         </Badge>
                       </td>
                       <td>
@@ -437,29 +441,6 @@ const EmployerPayments = () => {
                         </Badge>
                       </td>
                       <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <Button
-                          size="sm"
-                          variant={canRelease ? 'success' : 'secondary'}
-                          onClick={() => handleRelease(payment._id)}
-                          disabled={!canRelease || releasingPaymentId === payment._id}
-                          title={
-                            payment.status !== 'advance_paid'
-                              ? 'Only advance-paid records can be released'
-                              : !jobCompleted
-                              ? 'Worker must complete job first'
-                              : 'Click to release final payment'
-                          }
-                        >
-                          {releasingPaymentId === payment._id
-                            ? 'Processing...'
-                            : canRelease
-                            ? 'Release Now'
-                            : payment.status !== 'advance_paid'
-                            ? 'Not Applicable'
-                            : 'Waiting for Completion'}
-                        </Button>
-                      </td>
                     </tr>
                   );
                 })}

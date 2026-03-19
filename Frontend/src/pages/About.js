@@ -21,8 +21,8 @@ const About = () => {
               <Card className="border-0 shadow-sm rounded-3 h-100">
                 <Card.Body>
                   <div className="small text-muted">Users</div>
-                  <h5 className="mb-1">Workers + Employers + Admin</h5>
-                  <div className="text-muted small">All roles in one platform</div>
+                  <h5 className="mb-1">Workers + Employers</h5>
+                  <div className="text-muted small">Direct connection model</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -30,7 +30,7 @@ const About = () => {
               <Card className="border-0 shadow-sm rounded-3 h-100">
                 <Card.Body>
                   <div className="small text-muted">Payments</div>
-                  <h5 className="mb-1">Advance + Final + Admin Release</h5>
+                  <h5 className="mb-1">Advance + Final Release</h5>
                   <div className="text-muted small">Safe payment lifecycle</div>
                 </Card.Body>
               </Card>
@@ -80,21 +80,6 @@ const About = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-2">🔐 Admin</h5>
-              <p className="mb-3 text-muted">
-                Admin approves jobs, monitors dashboard data, and releases final payout to workers.
-              </p>
-              <ul className="mb-0 text-muted small">
-                <li>Approve or reject jobs</li>
-                <li>Monitor platform activity</li>
-                <li>Release worker payouts</li>
-              </ul>
-            </Card.Body>
-          </Card>
-        </Col>
       </Row>
 
       <Card className="border-0 shadow-sm rounded-4 mb-4">
@@ -105,7 +90,7 @@ const About = () => {
             <Col md={6} lg={4}><Card className="border rounded-3 h-100"><Card.Body><strong>2.</strong> Employer pays Advance</Card.Body></Card></Col>
             <Col md={6} lg={4}><Card className="border rounded-3 h-100"><Card.Body><strong>3.</strong> Work is Completed</Card.Body></Card></Col>
             <Col md={6} lg={6}><Card className="border rounded-3 h-100"><Card.Body><strong>4.</strong> Employer releases Final Payment</Card.Body></Card></Col>
-            <Col md={6} lg={6}><Card className="border rounded-3 h-100"><Card.Body><strong>5.</strong> Admin releases money to Worker</Card.Body></Card></Col>
+            <Col md={6} lg={6}><Card className="border rounded-3 h-100"><Card.Body><strong>5.</strong> Worker receives payment directly</Card.Body></Card></Col>
           </Row>
         </Card.Body>
       </Card>
@@ -120,7 +105,7 @@ const About = () => {
                 <Col md={6}><div>• No middleman exploitation</div></Col>
                 <Col md={6}><div>• Transparent status tracking</div></Col>
                 <Col md={6}><div>• Secure digital payment flow</div></Col>
-                <Col md={6}><div>• Admin-controlled payout safety</div></Col>
+                <Col md={6}><div>• Direct worker payout after completion</div></Col>
                 <Col md={6}><div>• Mobile-friendly Bootstrap interface</div></Col>
               </Row>
             </Card.Body>
@@ -138,11 +123,11 @@ const About = () => {
                 </Accordion.Item>
                 <Accordion.Item eventKey="1">
                   <Accordion.Header>When is final payment released?</Accordion.Header>
-                  <Accordion.Body>After work completion, employer releases final payment, then admin releases it to worker.</Accordion.Body>
+                  <Accordion.Body>After work completion, employer releases final payment directly to worker.</Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey="2">
                   <Accordion.Header>Is payment status trackable?</Accordion.Header>
-                  <Accordion.Body>Yes. Worker, employer, and admin dashboards show payment status and progress.</Accordion.Body>
+                  <Accordion.Body>Yes. Worker and employer dashboards show payment status and progress.</Accordion.Body>
                 </Accordion.Item>
               </Accordion>
             </Card.Body>
