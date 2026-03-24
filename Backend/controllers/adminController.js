@@ -586,6 +586,9 @@ exports.assignWorkersToJob = async (req, res) => {
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
+    if (!job.employerId || !job.employerId._id) {
+      return res.status(400).json({ message: 'Job is missing employerId or employer is invalid. Please check job data.' });
+    }
 
     const employer = await Employer.findById(job.employerId._id).populate('userId', 'name email phone');
     if (!employer) {
@@ -610,17 +613,35 @@ exports.assignWorkersToJob = async (req, res) => {
       });
     }
 
-    const workers = await Worker.find({ _id: { $in: uniqueWorkerIds }, isActive: true }).populate('userId', 'name email phone');
 
+    const workers = await Worker.find({ _id: { $in: uniqueWorkerIds }, isActive: true }).populate('userId', 'name email phone');
     if (workers.length !== uniqueWorkerIds.length) {
       return res.status(400).json({ message: 'Some workers are invalid or inactive' });
     }
 
-    const createdApplications = [];
+    // Check if any worker is already assigned to another ongoing/pending job
+    for (const worker of workers) {
+      // Find any application for this worker with status 'accepted' or 'completed' (excluding this job)
+      const activeApp = await Application.findOne({
+        workerId: worker._id,
+        jobId: { $ne: jobId },
+        status: { $in: ['accepted', 'completed'] },
+      });
+      if (activeApp) {
+        // Check if the assignment group for that job is still ongoing or pending
+        const group = await AssignmentGroup.findOne({ jobId: activeApp.jobId });
+        if (group && ['ongoing', 'pending'].includes(group.workStatus)) {
+          return res.status(400).json({
+            message: `Worker ${worker.userId.name || worker._id} is already assigned to another ongoing job and is not free.`,
+            workerId: worker._id,
+          });
+        }
+      }
+    }
 
+    const createdApplications = [];
     for (const worker of workers) {
       let application = await Application.findOne({ jobId, workerId: worker._id });
-
       if (!application) {
         application = await Application.create({
           workerId: worker._id,
@@ -727,6 +748,7 @@ exports.assignWorkersToJob = async (req, res) => {
       newlyAssignedApplications: createdApplications.length,
     });
   } catch (error) {
+    console.error('ASSIGN WORKERS ERROR:', error);
     return res.status(500).json({ message: 'Error assigning workers to job', error: error.message });
   }
 };

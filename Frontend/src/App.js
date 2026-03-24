@@ -8,7 +8,7 @@ import DashboardLayout from './components/DashboardLayout';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import About from './pages/About';
+// import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import WorkerDashboard from './pages/WorkerDashboard';
@@ -54,9 +54,10 @@ const RolePageLayout = ({ children }) => {
   const menuByRole = {
     worker: [
       { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
-      { to: '/jobs', label: 'Find Jobs', icon: '🔍' },
-      { to: '/worker/applications', label: 'My Applications', icon: '📋' },
-      { to: '/worker/payments', label: 'My Earnings', icon: '💳' },
+      { to: '/jobs', label: 'Public Jobs', icon: '📋' },
+      { to: '/messages', label: 'Messages', icon: '💬' },
+      { to: '/worker/applications', label: 'My Applications', icon: '📝' },
+      { to: '/worker/payments', label: 'Payments', icon: '💳' },
       { to: '/profile', label: 'Account', icon: '👤' },
     ],
     employer: [
@@ -64,6 +65,7 @@ const RolePageLayout = ({ children }) => {
       { to: '/employer/post-job', label: 'Post New Job', icon: '➕' },
       { to: '/employer/payments', label: 'Payments', icon: '💳' },
       { to: '/jobs', label: 'Public Jobs', icon: '📋' },
+      { to: '/messages', label: 'Messages', icon: '💬' },
       { to: '/profile', label: 'Account', icon: '👤' },
     ],
   };
@@ -72,7 +74,6 @@ const RolePageLayout = ({ children }) => {
     worker: '👷 Worker Panel',
     employer: '🏢 Employer Panel',
   };
-
   const subtitleByRole = {
     worker: 'Use left options easily',
     employer: 'Manage jobs from left menu',
@@ -107,10 +108,27 @@ function App() {
             <main className="flex-grow-1">
             <Routes>
               <Route path="/" element={<HomeResolver />} />
-              <Route path="/about" element={<About />} />
+              {/* <Route path="/about" element={<About />} /> */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/jobs" element={<JobList />} />
+              <Route 
+                path="/jobs" 
+                element={
+                  <DashboardLayout
+                    title={"🔍 Public Jobs"}
+                    subtitle={"Browse and apply for open jobs"}
+                    menuItems={[
+                      { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
+                      { to: '/messages', label: 'Messages', icon: '💬' },
+                      { to: '/worker/payments', label: 'Payments', icon: '💳' },
+                      { to: '/profile', label: 'Profile', icon: '👤' },
+                    ]}
+                    accountInfo={{}}
+                  >
+                    <JobList />
+                  </DashboardLayout>
+                }
+              />
               <Route path="/jobs/:id" element={<JobDetails />} />
             
             {/* Worker Routes */}
@@ -210,7 +228,19 @@ function App() {
               path="/messages" 
               element={
                 <ProtectedRoute allowedRoles={['worker', 'employer', 'admin']}>
-                  <MessageInbox />
+                  <DashboardLayout
+                    title={"💬 Messages"}
+                    subtitle={"Chat with admin, employer, or support"}
+                    menuItems={[
+                      { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
+                      { to: '/messages', label: 'Messages', icon: '💬' },
+                      { to: '/worker/payments', label: 'Payments', icon: '💳' },
+                      { to: '/profile', label: 'Profile', icon: '👤' },
+                    ]}
+                    accountInfo={{}}
+                  >
+                    <MessageInbox />
+                  </DashboardLayout>
                 </ProtectedRoute>
               } 
             />
@@ -236,7 +266,10 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </main>
-          <Footer />
+          {/* Hide Footer on dashboard pages */}
+          {![
+            '/worker/dashboard', '/employer/dashboard', '/admin/dashboard', '/worker/applications', '/worker/payments', '/employer/payments', '/employer/applications', '/profile', '/messages', '/messages/:otherUserId', '/messages/group/:chatId', '/jobs'
+          ].includes(window.location.pathname) && <Footer />}
         </div>
       </Router>
       </AuthProvider>

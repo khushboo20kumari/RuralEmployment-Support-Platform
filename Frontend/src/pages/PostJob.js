@@ -9,22 +9,21 @@ const PostJob = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    workType: 'construction_labour',
+    name: '',
     village: '',
     district: '',
     state: '',
     address: '',
     contactPhone: '',
     amount: '',
-    period: 'daily',
     numberOfPositions: 1,
-    experienceRequired: 0,
     startDate: '',
     endDate: '',
     startTime: '',
     endTime: '',
-    accommodation: false,
-    mealProvided: false,
+    workType: '',
+    // Optionally add skillsRequired if you want to support it
+    // skillsRequired: [],
   });
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +41,7 @@ const PostJob = () => {
         title: formData.title,
         description: formData.description,
         workType: formData.workType,
+        // skillsRequired: formData.skillsRequired, // Uncomment if you add this field
         location: {
           village: formData.village,
           district: formData.district,
@@ -51,21 +51,19 @@ const PostJob = () => {
         jobProviderContact: {
           phone: formData.contactPhone,
           address: formData.address,
+          name: formData.name,
         },
         salary: {
           amount: formData.amount,
-          period: formData.period,
+          period: 'daily',
         },
         numberOfPositions: formData.numberOfPositions,
-        experienceRequired: formData.experienceRequired,
         startDate: formData.startDate,
         endDate: formData.endDate,
         workingHours: {
           startTime: formData.startTime,
           endTime: formData.endTime,
         },
-        accommodation: formData.accommodation,
-        mealProvided: formData.mealProvided,
       };
 
       const response = await jobAPI.create(jobData);
@@ -99,6 +97,8 @@ const PostJob = () => {
               </div>
 
               <Form onSubmit={handleSubmit}>
+
+
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">💼 Job Title *</Form.Label>
                   <Form.Control
@@ -110,6 +110,24 @@ const PostJob = () => {
                     placeholder="e.g., Construction Worker Needed"
                     className="form-control-lg rounded-3"
                   />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">🛠️ Work Type *</Form.Label>
+                  <Form.Select
+                    name="workType"
+                    value={formData.workType}
+                    onChange={handleChange}
+                    required
+                    className="form-control-lg rounded-3"
+                  >
+                    <option value="">Select work type</option>
+                    <option value="construction_labour">Construction Labour</option>
+                    <option value="factory_helper">Factory Helper</option>
+                    <option value="farm_worker">Farm Worker</option>
+                    <option value="domestic_help">Domestic Help</option>
+                    <option value="other">Other</option>
+                  </Form.Select>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -125,241 +143,188 @@ const PostJob = () => {
                   />
                 </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">🏗️ Work Type *</Form.Label>
-                  <Form.Select name="workType" value={formData.workType} onChange={handleChange} required className="form-select-lg rounded-3">
-                    <option value="construction_labour">👷 Construction Labour</option>
-                    <option value="factory_helper">🏭 Factory Helper</option>
-                    <option value="farm_worker">🚜 Farm Worker</option>
-                    <option value="domestic_help">🏠 Domestic Help</option>
-                    <option value="other">📦 Other</option>
-                  </Form.Select>
-                </Form.Group>
 
-                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
-                  <h5 className="mb-3 fw-semibold">📍 Location</h5>
-                  <Row>
-                    <Col xs={12} sm={4}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Village</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="village"
-                          value={formData.village}
-                          onChange={handleChange}
-                          placeholder="Village name"
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={4}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">District *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="district"
-                          value={formData.district}
-                          onChange={handleChange}
-                          required
-                          placeholder="District"
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={4}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">State *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="state"
-                          value={formData.state}
-                          onChange={handleChange}
-                          required
-                          placeholder="State"
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">👤 Name *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Your Name"
+                  className="rounded-3"
+                />
+              </Form.Group>
 
-                  <Row>
-                    <Col xs={12} sm={8}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Address *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          required
-                          placeholder="Complete काम का address"
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={4}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Contact Phone *</Form.Label>
-                        <Form.Control
-                          type="tel"
-                          name="contactPhone"
-                          value={formData.contactPhone}
-                          onChange={handleChange}
-                          required
-                          placeholder="10-digit phone"
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
-
-                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
-                  <h5 className="mb-3 fw-semibold">💰 Salary</h5>
-                  <Row>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Amount (₹) *</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="amount"
-                          value={formData.amount}
-                          onChange={handleChange}
-                          required
-                          placeholder="Enter amount"
-                          className="form-control-lg rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Payment Period *</Form.Label>
-                        <Form.Select name="period" value={formData.period} onChange={handleChange} required className="form-select-lg rounded-3">
-                          <option value="hourly">⏰ Hourly</option>
-                          <option value="daily">📅 Daily</option>
-                          <option value="monthly">📆 Monthly</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
-
+              <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
+                <h5 className="mb-3 fw-semibold">📍 Location</h5>
                 <Row>
-                  <Col xs={12} sm={6}>
+                  <Col xs={12} sm={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">👥 Positions *</Form.Label>
+                      <Form.Label className="fw-semibold">Village</Form.Label>
                       <Form.Control
-                        type="number"
-                        name="numberOfPositions"
-                        value={formData.numberOfPositions}
+                        type="text"
+                        name="village"
+                        value={formData.village}
                         onChange={handleChange}
-                        required
-                        min="1"
-                        className="form-control-lg rounded-3"
+                        placeholder="Village name"
+                        className="rounded-3"
                       />
                     </Form.Group>
                   </Col>
-                  <Col xs={12} sm={6}>
+                  <Col xs={12} sm={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">📊 Experience (years)</Form.Label>
+                      <Form.Label className="fw-semibold">District *</Form.Label>
                       <Form.Control
-                        type="number"
-                        name="experienceRequired"
-                        value={formData.experienceRequired}
+                        type="text"
+                        name="district"
+                        value={formData.district}
                         onChange={handleChange}
-                        min="0"
-                        className="form-control-lg rounded-3"
+                        required
+                        placeholder="District"
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col xs={12} sm={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">State *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        required
+                        placeholder="State"
+                        className="rounded-3"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
+                <Row>
+                  <Col xs={12} sm={8}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Address *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        required
+                        placeholder="Complete काम का address"
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col xs={12} sm={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Contact Phone *</Form.Label>
+                      <Form.Control
+                        type="tel"
+                        name="contactPhone"
+                        value={formData.contactPhone}
+                        onChange={handleChange}
+                        required
+                        placeholder="10-digit phone"
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </div>
 
-                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
-                  <h5 className="mb-3 fw-semibold">📅 Work Duration (Kab Se Kab Tak)</h5>
-                  <Row>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Start Date *</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="startDate"
-                          value={formData.startDate}
-                          onChange={handleChange}
-                          required
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">End Date *</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="endDate"
-                          value={formData.endDate}
-                          onChange={handleChange}
-                          required
-                          min={formData.startDate || undefined}
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
 
-                <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
-                  <h5 className="mb-3 fw-semibold">⏰ Working Hours</h5>
-                  <Row>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Start Time</Form.Label>
-                        <Form.Control
-                          type="time"
-                          name="startTime"
-                          value={formData.startTime}
-                          onChange={handleChange}
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">End Time</Form.Label>
-                        <Form.Control
-                          type="time"
-                          name="endTime"
-                          value={formData.endTime}
-                          onChange={handleChange}
-                          className="rounded-3"
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">💰 Amount per Worker (Daily) *</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter daily amount"
+                  className="form-control-lg rounded-3"
+                />
+              </Form.Group>
 
-                <div className="rounded-3 p-3 mb-4" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
-                  <h5 className="mb-3 fw-semibold">✨ Benefits</h5>
-                  <Form.Group className="mb-2">
-                    <Form.Check
-                      type="checkbox"
-                      name="accommodation"
-                      label="🏠 Accommodation Provided"
-                      checked={formData.accommodation}
-                      onChange={handleChange}
-                      className="fw-semibold"
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-2">
-                    <Form.Check
-                      type="checkbox"
-                      name="mealProvided"
-                      label="🍽️ Meals Provided"
-                      checked={formData.mealProvided}
-                      onChange={handleChange}
-                      className="fw-semibold"
-                    />
-                  </Form.Group>
-                </div>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">👥 Number of Workers Needed *</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="numberOfPositions"
+                  value={formData.numberOfPositions}
+                  onChange={handleChange}
+                  required
+                  min="1"
+                  className="form-control-lg rounded-3"
+                />
+              </Form.Group>
+
+
+              <div className="rounded-3 p-3 mb-3" style={{ background: '#f8fafc', border: '1px solid #e5e7eb' }}>
+                <h5 className="mb-3 fw-semibold">📅 Work Duration (Kab Se Kab Tak)</h5>
+                <Row>
+                  <Col xs={12} sm={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Start Date *</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="startDate"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        required
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">End Date *</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="endDate"
+                        value={formData.endDate}
+                        onChange={handleChange}
+                        required
+                        min={formData.startDate || undefined}
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col xs={12} sm={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Start Time *</Form.Label>
+                      <Form.Control
+                        type="time"
+                        name="startTime"
+                        value={formData.startTime}
+                        onChange={handleChange}
+                        required
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">End Time *</Form.Label>
+                      <Form.Control
+                        type="time"
+                        name="endTime"
+                        value={formData.endTime}
+                        onChange={handleChange}
+                        required
+                        className="rounded-3"
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </div>
+
+
 
                 <Button variant="primary" type="submit" className="w-100 py-3 fw-bold rounded-3 post-job-submit-btn" size="lg" disabled={loading}>
                   {loading ? '⏳ Posting...' : '✅ Post Job Now'}

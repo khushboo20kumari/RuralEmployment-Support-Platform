@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useLanguage } from '../hooks/useLanguage';
+import JobTestimonial from '../components/JobTestimonial';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -29,6 +30,11 @@ const AdminDashboard = () => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [adminChats, setAdminChats] = useState([]);
   const [messageRoleFilter, setMessageRoleFilter] = useState('all');
+  const [jobsPage, setJobsPage] = useState(1);
+
+  const JOBS_PER_PAGE = 10;
+  const totalJobsPages = Math.ceil(jobs.length / JOBS_PER_PAGE);
+  const paginatedJobs = jobs.slice((jobsPage - 1) * JOBS_PER_PAGE, jobsPage * JOBS_PER_PAGE);
 
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -163,8 +169,9 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (selectedWorkers.length > job.neededWorkers) {
-      toast.error(`Is job me abhi sirf ${job.neededWorkers} worker assign ho sakte hain`);
+    const remainingSlots = Math.max(0, (Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0));
+    if (selectedWorkers.length > remainingSlots) {
+      toast.error(`Is job me abhi sirf ${remainingSlots} worker assign ho sakte hain`);
       return;
     }
 
@@ -587,23 +594,59 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.map((job) => (
-                    <tr key={job._id}>
-                      <td>{job.title}</td>
-                      <td>{job.employerId?.userId?.name || 'N/A'}</td>
-                      <td>{job.workType?.replace('_', ' ')}</td>
-                      <td>{job.location?.district}</td>
-                      <td>₹{job.salary?.amount}/{job.salary?.period}</td>
-                      <td>
-                        <Badge bg={job.jobStatus === 'open' ? 'success' : 'secondary'}>
-                          {t(`common.${job.jobStatus}`)}
-                        </Badge>
-                      </td>
-                      <td>{new Date(job.createdAt).toLocaleDateString()}</td>
-                    </tr>
+                  {paginatedJobs.map((job) => (
+                    <React.Fragment key={job._id}>
+                      <tr>
+                        <td>{job.title}</td>
+                        <td>{job.employerId?.userId?.name || 'N/A'}</td>
+                        <td>{job.workType?.replace('_', ' ')}</td>
+                        <td>{job.location?.district}</td>
+                        <td>₹{job.salary?.amount}/{job.salary?.period}</td>
+                        <td>
+                          <Badge bg={job.jobStatus === 'open' ? 'success' : 'secondary'}>
+                            {t(`common.${job.jobStatus}`)}
+                          </Badge>
+                          <div className="mt-2">
+                            <Card className="mb-2 border-info">
+                              <Card.Body className="p-2">
+                                <span className="fw-semibold">{job.autoPaymentStatus === 'completed' ? '✅ Payment Completed' : job.autoPaymentStatus === 'pending' ? '⏳ Payment Pending' : job.autoPaymentStatus || 'N/A'}</span>
+                              </Card.Body>
+                            </Card>
+                            {job.autoPaymentStatus === 'completed' && (
+                              <JobTestimonial jobId={job._id} />
+                            )}
+                          </div>
+                        </td>
+                        <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </Table>
+              {/* Pagination Controls */}
+              {totalJobsPages > 1 && (
+                <div className="d-flex justify-content-center align-items-center mt-3">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="me-2"
+                    disabled={jobsPage === 1}
+                    onClick={() => setJobsPage(jobsPage - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="mx-2">Page {jobsPage} of {totalJobsPages}</span>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="ms-2"
+                    disabled={jobsPage === totalJobsPages}
+                    onClick={() => setJobsPage(jobsPage + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Tab>
@@ -778,8 +821,8 @@ const AdminDashboard = () => {
                       <td>{job.requiredWorkers}</td>
                       <td>{job.assignedWorkers}</td>
                       <td>
-                        <Badge bg={job.neededWorkers > 0 ? 'warning' : 'success'}>
-                          {job.neededWorkers}
+                        <Badge bg={((Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0)) > 0 ? 'warning' : 'success'}>
+                          {Math.max(0, (Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0))}
                         </Badge>
                       </td>
                       <td>
@@ -787,7 +830,7 @@ const AdminDashboard = () => {
                           size="sm"
                           variant="outline-primary"
                           onClick={() => handleLoadSuggestions(job._id)}
-                          disabled={loadingSuggestionsByJob[job._id] || job.neededWorkers === 0}
+                          disabled={loadingSuggestionsByJob[job._id] || ((Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0)) === 0}
                           className="me-2"
                         >
                           {loadingSuggestionsByJob[job._id] ? 'Loading...' : '1) Get Matches'}
@@ -796,18 +839,18 @@ const AdminDashboard = () => {
                           size="sm"
                           variant="outline-success"
                           onClick={() => handleAutoMatchAndAssign(job)}
-                          disabled={assigningJobId === job._id || job.neededWorkers === 0}
+                          disabled={assigningJobId === job._id || ((Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0)) === 0}
                           className="me-2"
                         >
-                          {assigningJobId === job._id ? 'Auto Assigning...' : `Auto Assign ${job.neededWorkers} Workers`}
+                          {assigningJobId === job._id ? 'Auto Assigning...' : `Auto Assign ${Math.max(0, (Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0))} Workers`}
                         </Button>
                         <Button
                           size="sm"
                           variant="success"
                           onClick={() => handleAssignWorkers(job)}
-                          disabled={assigningJobId === job._id || job.neededWorkers === 0}
+                          disabled={assigningJobId === job._id || ((Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0)) === 0}
                         >
-                          {assigningJobId === job._id ? 'Assigning...' : `3) Assign Selected (max ${job.neededWorkers})`}
+                          {assigningJobId === job._id ? 'Assigning...' : `3) Assign Selected (max ${Math.max(0, (Number(job.numberOfPositions) || 0) - (Number(job.assignedWorkers) || 0))})`}
                         </Button>
                       </td>
                     </tr>
@@ -820,28 +863,95 @@ const AdminDashboard = () => {
                 if (!suggestions.length) return null;
 
                 const selected = selectedWorkersByJob[job._id] || [];
-                const maxAllowed = Number(job.neededWorkers) || 0;
+                const maxAllowed = Number(job.numberOfPositions) || 0;
 
                 return (
-                  <Card key={`${job._id}-suggestions`} className="mb-3 border">
+                  <Card key={`${job._id}-suggestions`} className="mb-3 border bg-light-subtle">
                     <Card.Body>
                       <h6 className="mb-2">Suggested workers for: {job.title}</h6>
                       <div className="small text-muted mb-2">
-                        2) Select exactly up to {maxAllowed} worker(s). Selected: {selected.length}
+                        2) Select up to <b>{maxAllowed}</b> worker(s). Selected: <b>{selected.length}</b>
                       </div>
-                      <Row className="g-2">
-                        {suggestions.map((worker) => (
-                          <Col md={6} lg={4} key={worker._id}>
-                            <Form.Check
-                              type="checkbox"
-                              id={`${job._id}-${worker._id}`}
-                              label={`${worker.userId?.name || 'Worker'} • Rating ${worker.averageRating?.toFixed?.(1) || '0'} • Exp ${worker.experience || 0}y`}
-                              checked={selected.includes(worker._id)}
-                              disabled={!selected.includes(worker._id) && selected.length >= maxAllowed}
-                              onChange={() => toggleWorkerSelection(job._id, worker._id)}
-                            />
-                          </Col>
-                        ))}
+                      <Row className="g-3">
+                        {suggestions.map((worker) => {
+                          const isSelected = selected.includes(worker._id);
+                          const isDisabled = !isSelected && selected.length >= maxAllowed;
+                          const user = worker.userId || {};
+                          return (
+                            <Col xs={12} md={6} lg={4} key={worker._id}>
+                              <Card className={`h-100 shadow-sm border-2 ${isSelected ? 'border-success' : ''}`}
+                                style={{ position: 'relative', background: isSelected ? '#e6ffed' : '#fff' }}>
+                                <Card.Body>
+                                  <div className="d-flex align-items-center mb-2">
+                                    <div className="me-3">
+                                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                                        {user.name ? user.name.charAt(0).toUpperCase() : 'W'}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="fw-bold fs-5 mb-0">{user.name || 'Worker'}</div>
+                                      <div className="small text-muted">{user.phone ? `📞 ${user.phone}` : ''}</div>
+                                    </div>
+                                  </div>
+                                  <div className="mb-2">
+                                    <span className="badge bg-primary me-1">Rating: {worker.averageRating?.toFixed?.(1) || '0'} ⭐</span>
+                                    <span className="badge bg-info me-1">Exp: {worker.experience || 0}y</span>
+                                    {worker.skills?.length > 0 && (
+                                      <span className="badge bg-secondary">{worker.skills.map((s) => s.replace('_', ' ')).join(', ')}</span>
+                                    )}
+                                  </div>
+                                  <div className="mb-2">
+                                    <div className="small text-muted">
+                                      {(() => {
+                                        const addr = user.address || worker.address;
+                                        if (!addr) return '-';
+                                        if (typeof addr === 'string') return addr;
+                                        if (typeof addr === 'object') {
+                                          // Format address object
+                                          const { village, district, state, pincode } = addr;
+                                          return [village, district, state, pincode].filter(Boolean).join(', ');
+                                        }
+                                        return '-';
+                                      })()}
+                                    </div>
+                                  </div>
+                                  <div className="d-flex gap-2 mb-2">
+                                    <Button
+                                      as={Link}
+                                      to={`/messages/${user._id}`}
+                                      size="sm"
+                                      variant="outline-success"
+                                      className="d-flex align-items-center"
+                                    >
+                                      <span className="me-1">💬</span> Chat
+                                    </Button>
+                                    {user.phone && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline-primary"
+                                        href={`tel:${user.phone}`}
+                                        className="d-flex align-items-center"
+                                      >
+                                        <span className="me-1">📞</span> Call
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Form.Check
+                                    type="checkbox"
+                                    id={`${job._id}-${worker._id}`}
+                                    label={<span className="fw-semibold">Select for assignment</span>}
+                                    checked={isSelected}
+                                    disabled={isDisabled}
+                                    onChange={() => toggleWorkerSelection(job._id, worker._id)}
+                                  />
+                                  {isSelected && (
+                                    <span className="badge bg-success position-absolute top-0 end-0 m-2">Selected</span>
+                                  )}
+                                </Card.Body>
+                              </Card>
+                            </Col>
+                          );
+                        })}
                       </Row>
                     </Card.Body>
                   </Card>

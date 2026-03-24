@@ -184,109 +184,100 @@ const Messages = () => {
   }
 
     return (
-      <Container className="my-5" style={{background:"red", minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <Row className="flex-grow-1" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <Col md={8} className="mx-auto d-flex flex-column" style={{ height: '70vh', display: 'flex' }}>
-            <Card className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0, height: '100%' }}>
-            <Card.Header className="bg-primary text-white">
-              <h5 className="mb-0">💬 संदेश</h5>
-              {isGroupMode
-                ? <small>{groupMeta?.groupName || groupMeta?.jobId?.title || 'Support Group'}</small>
-                : (otherUser && <small>{otherUser.name}</small>)}
-              {!isGroupMode && !!otherUser?.phone && (
-                <div className="mt-2">
-                  <Button size="sm" variant="light" href={`tel:${otherUser.phone}`}>📞 Call</Button>
-                </div>
-              )}
-            </Card.Header>
-
-            <Card.Body
-              style={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: 'auto',
-                backgroundColor: '#f8f9fa',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                paddingBottom: 0,
-              }}
-            >
+      <Container fluid className="p-0" style={{ minHeight: '100vh', background: '#ece5dd', display: 'flex', flexDirection: 'column' }}>
+        <Row className="justify-content-center" style={{ flex: 1, minHeight: '100vh' }}>
+          <Col xs={12} md={8} lg={6} className="d-flex flex-column p-0" style={{ height: '100vh' }}>
+            {/* Header */}
+            <div style={{ background: '#075e54', color: '#fff', padding: '16px 20px', borderBottom: '2px solid #25d366', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isGroupMode ? (groupMeta?.groupName || groupMeta?.jobId?.title || 'G') : (otherUser?.name || 'U'))}&background=25d366&color=fff&rounded=true&size=44`} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', marginRight: 12, boxShadow: '0 2px 8px #25d36633' }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{isGroupMode ? (groupMeta?.groupName || groupMeta?.jobId?.title || 'Support Group') : (otherUser?.name || 'User')}</div>
+                {!isGroupMode && !!otherUser?.phone && (
+                  <div style={{ fontSize: 13, color: '#e0e0e0', marginTop: 2 }}>
+                    <Button size="sm" variant="light" href={`tel:${otherUser.phone}`}>📞 Call</Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Chat Area */}
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: 'url(https://i.imgur.com/4M7IWwP.png)', display: 'flex', flexDirection: 'column', padding: '18px 8px 10px 8px', gap: 2 }}>
               {messages.length === 0 ? (
                 <div className="text-center text-muted py-5">
                   <p>कोई संदेश नहीं। बातचीत शुरू करें!</p>
                 </div>
               ) : (
                 <div>
-                  {messages.map((msg) => (
-                    <div
-                      key={msg._id}
-                      className="mb-3"
-                      style={{
-                        textAlign: isCurrentUserId(msg.senderId?._id) ? 'right' : 'left',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'inline-block',
-                          maxWidth: '70%',
-                          padding: '10px 15px',
-                          borderRadius: '10px',
-                          backgroundColor:
-                            isCurrentUserId(msg.senderId?._id)
-                              ? '#007bff'
-                              : '#e9ecef',
-                          color:
-                            isCurrentUserId(msg.senderId?._id) ? 'white' : 'black',
-                          wordWrap: 'break-word',
-                        }}
-                      >
-                        {isGroupMode && !isCurrentUserId(msg.senderId?._id) && (
-                          <div className="small fw-semibold mb-1">{msg.senderId?.name || 'User'}</div>
+                  {messages.map((msg, idx) => {
+                    const isMe = isCurrentUserId(msg.senderId?._id);
+                    const showSenderName = !isMe && msg.senderId?.name && (isGroupMode || (idx === 0 || messages[idx-1]?.senderId?._id !== msg.senderId?._id));
+                    return (
+                      <div key={msg._id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 6 }}>
+                        {showSenderName && (
+                          <div style={{ fontWeight: 600, color: '#075e54', marginBottom: 2, marginLeft: 6, fontSize: 14 }}>{msg.senderId?.name}</div>
                         )}
-                        <p className="mb-1">{msg.message}</p>
-                        <small
+                        <div
                           style={{
-                            opacity: 0.7,
-                            fontSize: '0.8rem',
+                            display: 'inline-block',
+                            maxWidth: '85%',
+                            minWidth: 40,
+                            padding: '12px 18px',
+                            borderRadius: 18,
+                            background: isMe ? '#dcf8c6' : '#fff',
+                            color: '#222',
+                            fontSize: 16,
+                            boxShadow: isMe ? '0 2px 8px 0 #25d36633' : '0 1px 4px 0 rgba(0,0,0,0.08)',
+                            wordBreak: 'break-word',
+                            marginLeft: isMe ? 24 : 0,
+                            marginRight: isMe ? 0 : 24,
+                            borderBottomRightRadius: isMe ? 6 : 18,
+                            borderBottomLeftRadius: isMe ? 18 : 6,
+                            borderTopLeftRadius: 18,
+                            borderTopRightRadius: 18,
+                            transition: 'background 0.2s',
+                            border: isMe ? '1px solid #b2f7cc' : '1px solid #ece5dd',
+                            position: 'relative',
                           }}
                         >
-                          {new Date(msg.createdAt).toLocaleTimeString('hi-IN')}
-                          {msg.isRead && ' ✓✓'}
-                        </small>
+                          <div>{msg.message}</div>
+                          <div style={{ fontSize: 12, color: '#888', marginTop: 4, textAlign: 'right' }}>{new Date(msg.createdAt).toLocaleTimeString('en-IN')}</div>
+                          {isMe && (
+                            <span style={{ position: 'absolute', bottom: 6, right: 10, fontSize: 12, color: '#25d366' }}>✓</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div ref={messagesEndRef} />
                 </div>
               )}
-            </Card.Body>
-
-            <Card.Footer style={{ background: '#fff', borderTop: '1px solid #eee' }}>
-              <Form onSubmit={handleSendMessage}>
-                <div className="input-group">
+            </div>
+            {/* Input */}
+            <div style={{ background: '#f0f0f0', borderTop: '1px solid #eee', padding: '14px 18px', position: 'relative', width: '100%' }}>
+              <Form onSubmit={handleSendMessage} style={{ width: '100%' }}>
+                <div style={{ display: 'flex', gap: 10 }}>
                   <Form.Control
                     type="text"
                     placeholder="अपना संदेश लिखें..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     disabled={sending}
+                    style={{ borderRadius: 20, fontSize: 16, padding: '10px 18px', flex: 1, border: '1px solid #ccc', background: '#fff', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.04)' }}
                   />
                   <Button
-                    variant="primary"
+                    variant="success"
                     type="submit"
                     disabled={sending || !newMessage.trim()}
+                    style={{ borderRadius: 20, minWidth: 64, background: '#25d366', border: 'none', fontWeight: 700, fontSize: 16, boxShadow: '0 2px 8px 0 #25d36633' }}
                   >
                     {sending ? 'भेजा जा रहा है...' : 'भेजें'}
                   </Button>
                 </div>
               </Form>
-            </Card.Footer>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
-  );
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    );
 };
 
 export default Messages;

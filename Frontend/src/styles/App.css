@@ -345,12 +345,16 @@ tr:hover {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  color: #1F2937;
+  color: #111 !important;
   background: #FFFFFF;
   background-size: auto;
   background-attachment: fixed;
   line-height: 1.6;
   min-height: 100vh;
+}
+
+body, .container, .row, .col, .card, .card-body, .text-muted, .lead, .section-title, .fw-bold, .mb-2, .mb-3, .mb-4, .mb-5, .about-hero-card, .problem-card, .problem-icon, .dashboard-side-link, .dashboard-sidebar, .navbar, .nav-link, .form-label, .form-control, .form-check-label, .form-check-input, .btn, .accordion-button, .accordion-body, .accordion-header, .accordion-item, .badge, .table, .table th, .table td, .modal-content, .modal-title, .modal-body, .modal-footer, .modal-header, .dropdown-item, .dropdown-menu, .dropdown-toggle, .dropdown, .list-group-item, .list-group, .alert, .alert-heading, .alert-link, .alert-dismissible, .alert-success, .alert-danger, .alert-warning, .alert-info, .alert-primary, .alert-secondary, .alert-light, .alert-dark {
+  color: #111 !important;
 }
 
 .App {

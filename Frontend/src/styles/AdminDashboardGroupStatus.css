@@ -1,0 +1,50 @@
+/* AdminDashboardGroupStatus.css: Responsive styles for group/payment/timeline cards */
+
+@media (max-width: 767.98px) {
+  .group-status-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .group-status-card {
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 1rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .group-status-card .badge {
+    font-size: 0.95em;
+    padding: 0.4em 0.7em;
+  }
+  .timeline-section {
+    margin-top: 0.5rem;
+  }
+  .timeline-list {
+    padding-left: 0;
+  }
+  .group-status-card .fw-semibold, .group-status-card .fw-bold {
+    font-size: 1.05em;
+  }
+  .group-status-card .small {
+    font-size: 0.97em;
+  }
+  .group-status-card .text-muted {
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .group-status-card {
+    padding: 0.7rem;
+    font-size: 0.98rem;
+  }
+  .group-status-card .badge {
+    font-size: 0.9em;
+  }
+}
+
+/* Always allow horizontal scroll for tables on mobile */
+.table-responsive {
+  overflow-x: auto;
+}

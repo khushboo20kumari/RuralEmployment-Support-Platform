@@ -64,10 +64,10 @@ const Navbar = () => {
               🏠 Home
             </Nav.Link>
             <Nav.Link as={Link} to="/jobs" className="nav-link-item">
-              📋 Jobs
+              All Jobs
             </Nav.Link>
             <Nav.Link as={Link} to="/about" className="nav-link-item">
-              ℹ️ About
+              About
             </Nav.Link>
             
             {/* Language Toggle */}
@@ -97,9 +97,7 @@ const Navbar = () => {
                     </Badge>
                   )}
                 </Nav.Link>
-                <Nav.Link as={Link} to="/profile" className="nav-link-item">
-                  👤 Account
-                </Nav.Link>
+                {/* Profile/Account link removed as per request */}
                 
                 <div className="nav-link-item">
                   <Button 

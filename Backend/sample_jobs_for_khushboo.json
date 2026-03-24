@@ -1,0 +1,47 @@
+[
+  {
+    "employerId": "Khushboo Kumari (ObjectId for ravadikumari1234@gmail.com)",
+    "title": "Construction Site Helper Needed",
+    "description": "Looking for 2 helpers for a construction site. Work is for 1 month, daily wage, food provided.",
+    "workType": "construction_labour",
+    "location": {
+      "district": "Patna",
+      "state": "Bihar",
+      "address": "Near Gandhi Maidan"
+    },
+    "salary": { "amount": 500, "period": "daily" },
+    "numberOfPositions": 2,
+    "jobStatus": "open",
+    "isApproved": false
+  },
+  {
+    "employerId": "Khushboo Kumari (ObjectId for ravadikumari1234@gmail.com)",
+    "title": "Factory Packing Worker",
+    "description": "Need 3 workers for packing in a small factory. 8 hour shifts, monthly payment.",
+    "workType": "factory_helper",
+    "location": {
+      "district": "Patna",
+      "state": "Bihar",
+      "address": "Industrial Area, Patna"
+    },
+    "salary": { "amount": 12000, "period": "monthly" },
+    "numberOfPositions": 3,
+    "jobStatus": "open",
+    "isApproved": false
+  },
+  {
+    "employerId": "Khushboo Kumari (ObjectId for ravadikumari1234@gmail.com)",
+    "title": "Farm Labour Needed",
+    "description": "Hiring 4 farm workers for wheat harvesting. 15 days work, food and stay provided.",
+    "workType": "farm_worker",
+    "location": {
+      "district": "Patna",
+      "state": "Bihar",
+      "address": "Village Rampur, Patna"
+    },
+    "salary": { "amount": 600, "period": "daily" },
+    "numberOfPositions": 4,
+    "jobStatus": "open",
+    "isApproved": false
+  }
+]

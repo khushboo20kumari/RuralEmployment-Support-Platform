@@ -167,26 +167,17 @@ const EmployerPayments = () => {
 
   return (
     <Container className="my-5">
-      <h2 className="mb-4">💰 Payments</h2>
+
 
       <Card className="mb-4">
         <Card.Body>
-          <div className="fw-semibold">Payment Summary</div>
-          <div className="small text-muted mt-1">
-            Gross Paid: ₹{payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)} • Platform Fee (Auto ₹20 per payment): ₹{totalPlatformFee} • Net to Workers: ₹{totalWorkerNet}
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Alert variant="info">
-        <strong>Payment Flow:</strong> Step 1: Assign/Accept Work → Step 2: Give Advance Payment → Step 3: On work end date, payment auto moves to platform → Step 4: Admin releases to worker
-      </Alert>
-
-      <Card className="mb-4">
-        <Card.Body>
-          <h5 className="mb-3">📋 Advance Payment Ready (Not Yet Paid)</h5>
+          <h5 className="mb-3">📋 Advance Payment Ready</h5>
           {eligibleApplications.length === 0 ? (
-            <p className="text-muted mb-0">No accepted applications available for advance payment.</p>
+            <div className="d-flex flex-column align-items-center justify-content-center py-4">
+              <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" alt="No Applications" style={{ width: 80, opacity: 0.7 }} />
+              <div className="fw-semibold mt-3 mb-1" style={{ fontSize: '1.1rem' }}>No Workers Ready for Advance Payment</div>
+              <div className="text-muted">Assign work to a worker to enable advance payment.</div>
+            </div>
           ) : (
             <Table responsive hover>
               <thead>
@@ -252,11 +243,13 @@ const EmployerPayments = () => {
 
       <Card className="mb-4 border-success">
         <Card.Body>
-          <h5 className="mb-3">✅ Auto Move to Platform (By Assigned End Date)</h5>
+          <h5 className="mb-3">✅ Auto Move to Platform</h5>
           {pendingReleasePayments.length === 0 ? (
-            <Alert variant="warning" className="mb-0">
-              No advance-paid applications yet. First, make an advance payment above.
-            </Alert>
+            <div className="d-flex flex-column align-items-center justify-content-center py-4">
+              <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="No Advance Paid" style={{ width: 80, opacity: 0.7 }} />
+              <div className="fw-semibold mt-3 mb-1" style={{ fontSize: '1.1rem' }}>No Advance Payments Yet</div>
+              <div className="text-muted">Make an advance payment to see it move to the platform automatically.</div>
+            </div>
           ) : (
             <>
             <Table responsive hover className="d-none d-md-table">
@@ -340,9 +333,13 @@ const EmployerPayments = () => {
 
       <Card className="mb-4 border-info">
         <Card.Body>
-          <h5 className="mb-3">🏦 Payment on Platform (Admin Will Release)</h5>
+          <h5 className="mb-3">🏦 Payment on Platform</h5>
           {platformPendingPayments.length === 0 ? (
-            <p className="text-muted mb-0">No payment is currently pending on platform.</p>
+            <div className="d-flex flex-column align-items-center justify-content-center py-4">
+              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="No Platform Payment" style={{ width: 80, opacity: 0.7 }} />
+              <div className="fw-semibold mt-3 mb-1" style={{ fontSize: '1.1rem' }}>No Payments Pending on Platform</div>
+              <div className="text-muted">Payments will appear here after advance is paid and work is completed.</div>
+            </div>
           ) : (
             <Table responsive hover>
               <thead>
@@ -374,81 +371,7 @@ const EmployerPayments = () => {
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Body>
-          <h5 className="mb-3">📊 Payment History</h5>
-          {payments.length === 0 ? (
-            <p className="text-muted mb-0">No payments made yet.</p>
-          ) : (
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th>Worker Details</th>
-                  <th>Job Title</th>
-                  <th>Assigned Duration</th>
-                  <th>Days Worked</th>
-                  <th>Gross (₹)</th>
-                  <th>Platform Fee (₹)</th>
-                  <th>Net to Worker (₹)</th>
-                  <th>Method</th>
-                  <th>Payment Status</th>
-                  <th>Job Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment) => {
-                  const jobCompleted = payment.applicationId?.status === 'completed';
-                  return (
-                    <tr key={payment._id}>
-                      <td>
-                        <div className="small">
-                          <div><strong>{payment.workerId?.userId?.name || 'N/A'}</strong></div>
-                          <div className="text-muted">{payment.workerId?.userId?.phone || 'No phone'}</div>
-                        </div>
-                      </td>
-                      <td>{payment.applicationId?.jobId?.title || 'N/A'}</td>
-                      <td>
-                        {payment.applicationId?.jobId?.startDate ? new Date(payment.applicationId.jobId.startDate).toLocaleDateString('en-IN') : '-'}
-                        {' '}to{' '}
-                        {payment.applicationId?.jobId?.endDate ? new Date(payment.applicationId.jobId.endDate).toLocaleDateString('en-IN') : '-'}
-                      </td>
-                      <td>{payment.applicationId?.attendanceCount || 0} days</td>
-                      <td>₹{payment.amount}</td>
-                      <td>₹{payment.platformFee || 0}</td>
-                      <td>₹{payment.netAmount || 0}</td>
-                      <td>{payment.paymentMethod?.replace('_', ' ') || 'N/A'}</td>
-                      <td>
-                        <Badge
-                          bg={
-                            payment.status === 'completed'
-                              ? 'success'
-                              : payment.status === 'advance_paid'
-                              ? 'info'
-                              : 'warning'
-                          }
-                        >
-                          {payment.status === 'completed'
-                            ? '✓ Completed'
-                            : payment.status === 'advance_paid'
-                            ? 'Advance Paid'
-                            : 'Pending Release'}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge bg={jobCompleted ? 'success' : 'warning'}>
-                          {jobCompleted ? '✓ Completed' : 'In Progress'}
-                        </Badge>
-                      </td>
-                      <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
-      </Card>
+
     </Container>
   );
 };
