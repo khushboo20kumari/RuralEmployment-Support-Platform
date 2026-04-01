@@ -91,14 +91,26 @@ const EmployerDashboard = () => {
     );
   }
 
+  // Role header card
+  const roleHeader = (
+    <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{background:'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)'}}>
+      <Card.Body className="d-flex align-items-center gap-3 p-4">
+        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name||'U')}&background=6366f1&color=fff&rounded=true&size=64`} alt="avatar" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(99,102,241,0.15)'}} />
+        <div>
+          <h3 className="fw-bold mb-1" style={{color:'#6366f1',letterSpacing:0.5}}>{user?.name || 'Employer'} <span style={{fontSize:22,marginLeft:8}}>🏢 Employer</span></h3>
+          <div className="text-muted" style={{fontSize:'1.08rem'}}>Welcome to your Employer Dashboard</div>
+        </div>
+      </Card.Body>
+    </Card>
+  );
+
   // Sidebar menu for employer (same as RolePageLayout in App.js)
   const employerMenu = [
-    { to: '/employer/dashboard', label: 'Dashboard', icon: '🏠' },
-    { to: '/employer/post-job', label: 'Post New Job', icon: '➕' },
-    { to: '/employer/payments', label: 'Payments', icon: '💳' },
-    { to: '/jobs', label: 'Public Jobs', icon: '📋' },
-    { to: '/messages', label: 'Messages', icon: '💬' },
-    { to: '/profile', label: 'Account', icon: '👤' },
+    { to: '/employer/dashboard', label: 'Dashboard' },
+    { to: '/employer/post-job', label: 'Post New Job' },
+    { to: '/employer/payments', label: 'Payments' },
+    { to: '/messages', label: 'Messages' },
+    { to: '/profile', label: 'Account' },
   ];
 
   return (
@@ -113,6 +125,7 @@ const EmployerDashboard = () => {
       }}
     >
       <Container className="my-4 my-md-5">
+        {roleHeader}
         <Row className="mb-4">
           <Col md={3} sm={6} xs={12} className="mb-3">
             <Card className="shadow-sm border-0 text-center">

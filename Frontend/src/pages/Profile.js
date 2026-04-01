@@ -176,16 +176,25 @@ const Profile = () => {
   }
 
   return (
-    <Container className="my-5">
-      <h2 className="mb-3">{language === 'hi' ? '👤 मेरी प्रोफाइल' : '👤 My Profile'}</h2>
-      <p className="text-muted mb-4">
-        {language === 'hi'
-          ? 'सिर्फ जरूरी जानकारी भरें। जितनी साफ प्रोफाइल होगी, उतनी जल्दी काम मिलेगा।'
-          : 'Fill only needed details. A clear profile helps you get work faster.'}
-      </p>
-
-      <Row>
-        <Col md={8}>
+    <div style={{ background: '#f6f7f9', minHeight: '100vh', padding: '32px 0' }}>
+      <Container>
+        <Card className="profile-header-card mb-4" style={{ border: 'none', borderRadius: 18, boxShadow: '0 2px 12px #bae6fd33', background: '#e0f2fe' }}>
+          <Card.Body className="d-flex align-items-center gap-4 p-4">
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name||'U')}&background=0ea5e9&color=fff&rounded=true&size=80`} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', boxShadow: '0 2px 8px #bae6fd33', border: '3px solid #fff' }} />
+            <div>
+              <h2 className="fw-bold mb-1" style={{ color: '#0ea5e9', fontSize: '2.1rem', letterSpacing: 0.5 }}>{language === 'hi' ? 'मेरी प्रोफाइल' : 'My Profile'}</h2>
+              <div className="text-muted mb-1" style={{ fontSize: '1.08rem' }}>{user?.email}</div>
+              <div style={{ fontSize: 15, color: '#059669', fontWeight: 600 }}>{user?.userType === 'worker' ? (language === 'hi' ? 'मज़दूर' : 'Worker') : (language === 'hi' ? 'मालिक' : 'Employer')}</div>
+            </div>
+          </Card.Body>
+        </Card>
+        <p className="text-muted mb-4" style={{ fontSize: 17 }}>
+          {language === 'hi'
+            ? 'सिर्फ जरूरी जानकारी भरें। जितनी साफ प्रोफाइल होगी, उतनी जल्दी काम मिलेगा।'
+            : 'Fill only needed details. A clear profile helps you get work faster.'}
+        </p>
+        <Row>
+          <Col md={8}>
           <Tabs defaultActiveKey="basic" className="mb-3">
             <Tab eventKey="basic" title={language === 'hi' ? '1) जरूरी जानकारी' : '1) Basic Info'}>
               <Card className="simple-profile-card">
@@ -494,8 +503,9 @@ const Profile = () => {
             </Card.Body>
           </Card>
         </Col>
-      </Row>
-    </Container>
+        </Row>
+      </Container>
+    </div>
   );
 };
 

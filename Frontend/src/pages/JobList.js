@@ -50,12 +50,11 @@ const JobList = () => {
 
   // Sidebar menu for employer
   const employerMenu = [
-    { to: '/employer/dashboard', label: 'Dashboard', icon: '🏠' },
-    { to: '/employer/post-job', label: 'Post New Job', icon: '➕' },
-    { to: '/employer/payments', label: 'Payments', icon: '💳' },
-    { to: '/jobs', label: 'Public Jobs', icon: '📋' },
-    { to: '/profile', label: 'Company Profile', icon: '👤' },
-    { to: '/messages', label: 'Messages', icon: '💬' },
+    { to: '/employer/dashboard', label: 'Dashboard' },
+    { to: '/employer/post-job', label: 'Post New Job' },
+    { to: '/employer/payments', label: 'Payments' },
+    { to: '/profile', label: 'Company Profile' },
+    { to: '/messages', label: 'Messages' },
   ];
 
   // If employer, wrap in DashboardLayout for sidebar
@@ -144,73 +143,54 @@ const JobList = () => {
             {jobs.map((job) => {
               const localizedJob = getLocalizedJobData(job, language);
               return (
-                <Col md={6} lg={4} key={job._id}>
-                  <Card className="job-card h-100 border-0 rounded-4 shadow job-list-item position-relative" style={{ border: '1.5px solid #bae6fd', transition: 'transform 0.18s, box-shadow 0.18s', cursor: 'pointer', overflow: 'visible', background: '#f8fafc' }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 8px 32px 0 #38bdf833'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px 0 #bae6fd33'; }}
+                <Col md={12} key={job._id}>
+                  <Card className="job-card job-list-item d-flex flex-row align-items-stretch border-0 rounded-4 shadow-sm mb-4" style={{ border: '1.5px solid #e5e7eb', background: '#fff', minHeight: 160, transition: 'box-shadow 0.18s, transform 0.18s', cursor: 'pointer', overflow: 'hidden' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 8px 32px 0 #b6c6d833'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 12px 0 #e5e7eb55'; }}
                   >
-                    {/* Decorative Icon */}
-                    <div style={{
-                      position: 'absolute',
-                      top: -32,
-                      right: 24,
-                      zIndex: 2,
-                      background: 'linear-gradient(135deg,#bae6fd 60%,#38bdf8 100%)',
-                      borderRadius: '50%',
-                      width: 56,
-                      height: 56,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 12px #bae6fd88',
-                      border: '2.5px solid #fff',
-                    }}>
-                      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Job" style={{ width: 36, height: 36 }} />
+                    {/* Image/Logo left */}
+                    <div className="d-flex align-items-center justify-content-center" style={{ minWidth: 120, background: '#f3f6f8', height: '100%' }}>
+                      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Job" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', boxShadow: '0 2px 8px #e5e7eb55' }} />
                     </div>
-                    <Card.Body className="p-3 p-md-4 d-flex flex-column">
-                      <Card.Title className="fw-bold mb-2" style={{ fontSize: 22, color: '#0ea5e9', letterSpacing: 0.5, minHeight: 56 }}>
-                        {localizedJob.displayTitle}
-                      </Card.Title>
-
-                      <div className="d-flex align-items-center mb-2" style={{ gap: 8 }}>
-                        <span style={{ fontSize: 18, color: '#38bdf8' }}>🏢</span>
-                        <span className="text-muted small fw-semibold">{job.employerId?.companyName || 'Company'}</span>
+                    {/* Content right */}
+                    <div className="flex-grow-1 d-flex flex-column justify-content-between p-3 p-md-4">
+                      <div>
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <h5 className="fw-bold mb-0" style={{ color: '#222', fontSize: 20, letterSpacing: 0.2 }}>{localizedJob.displayTitle}</h5>
+                          <span className="text-muted small fw-semibold" style={{ fontSize: 15 }}>{job.employerId?.companyName || 'Company'}</span>
+                        </div>
+                        <div className="d-flex flex-wrap gap-2 mb-2">
+                          <span className="badge" style={{ background: '#e5e7eb', color: '#222', fontWeight: 500, fontSize: 15, borderRadius: 7, padding: '6px 14px' }}>
+                            ₹{job.salary?.amount || job.salary}/{getLocalizedSalaryPeriod(job.salaryPeriod || job.salary?.period, language)}
+                          </span>
+                          <span className="badge" style={{ background: '#f3f6f8', color: '#555', fontWeight: 500, fontSize: 15, borderRadius: 7, padding: '6px 14px' }}>
+                            {job.location?.district || job.location}
+                          </span>
+                          {job.startDate && job.endDate && (
+                            <span className="badge" style={{ background: '#f3f6f8', color: '#555', fontWeight: 500, fontSize: 15, borderRadius: 7, padding: '6px 14px' }}>
+                              {new Date(job.startDate).toLocaleDateString('en-IN')} - {new Date(job.endDate).toLocaleDateString('en-IN')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-muted mb-2" style={{ fontSize: 15, minHeight: 36 }}>
+                          {localizedJob.displayDescription?.substring(0, 90)}...
+                        </div>
                       </div>
-
-                      <div className="mb-3 d-flex flex-wrap gap-2">
-                        <Badge bg="primary" className="px-3 py-2" style={{ fontSize: 15, background: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', color: '#fff', border: 'none' }}>
-                          💰 ₹{job.salary?.amount || job.salary}/{getLocalizedSalaryPeriod(job.salaryPeriod || job.salary?.period, language)}
-                        </Badge>
-                        <Badge bg="info" className="px-3 py-2" style={{ fontSize: 15, background: 'linear-gradient(90deg,#38bdf8,#0ea5e9)', color: '#fff', border: 'none' }}>
-                          📍 {job.location?.district || job.location}
-                        </Badge>
-                        {job.startDate && job.endDate && (
-                          <Badge bg="secondary" className="px-3 py-2" style={{ fontSize: 15, background: 'linear-gradient(90deg,#fbbf24,#f59e42)', color: '#fff', border: 'none' }}>
-                            📅 {new Date(job.startDate).toLocaleDateString('en-IN')} - {new Date(job.endDate).toLocaleDateString('en-IN')}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <p className="small text-muted mb-3 flex-grow-1" style={{ fontSize: 16, minHeight: 48 }}>
-                        <span style={{ color: '#0ea5e9', fontWeight: 600 }}>Job Details: </span>
-                        {localizedJob.displayDescription?.substring(0, 90)}...
-                      </p>
-
-                      <div className="d-flex align-items-center justify-content-between mt-auto" style={{ gap: 8 }}>
+                      <div className="d-flex align-items-center justify-content-between mt-2">
                         <Button
                           as={Link}
                           to={`/jobs/${job._id}`}
-                          variant="primary"
+                          variant="outline-primary"
                           className="fw-bold px-4 py-2"
-                          style={{ borderRadius: 12, fontSize: 17, background: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', border: 'none', boxShadow: '0 2px 8px #38bdf833' }}
+                          style={{ borderRadius: 8, fontSize: 16, border: '1.5px solid #0073b1', background: '#fff', color: '#0073b1', boxShadow: 'none', fontWeight: 600 }}
                         >
-                          🔍 View Details
+                          View Details
                         </Button>
                         <span className="text-muted small" style={{ fontSize: 14 }}>
                           Posted: {new Date(job.createdAt).toLocaleDateString('en-IN')}
                         </span>
                       </div>
-                    </Card.Body>
+                    </div>
                   </Card>
                 </Col>
               );
@@ -221,22 +201,7 @@ const JobList = () => {
     </div>
   );
 
-  if (user && user.userType === 'employer') {
-    return (
-      <DashboardLayout
-        title="🏢 Employer Panel"
-        subtitle="Manage jobs and workers"
-        menuItems={employerMenu}
-        accountInfo={{
-          name: user?.name,
-          email: user?.email,
-          type: user?.userType,
-        }}
-      >
-        {mainContent}
-      </DashboardLayout>
-    );
-  }
+  // Always render only mainContent. No sidebar on public jobs page.
   return mainContent;
 };
 

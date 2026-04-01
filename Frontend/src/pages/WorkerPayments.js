@@ -54,77 +54,83 @@ const WorkerPayments = () => {
   }
 
   return (
-    <Container className="my-5">
-      <h2 className="mb-4">My Earnings</h2>
-
-      <Card className="mb-4">
-        <Card.Body>
-          <h4 className="mb-0">Total Amount Received: ₹{totalEarnings}</h4>
-          <div className="small text-muted mt-2">
-            Gross Paid: ₹{totalGrossAmount} • Platform Fee (Auto ₹20 per payment): ₹{totalPlatformFee} • Net to Worker: ₹{totalEarnings}
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Card>
-        <Card.Body>
-          {payments.length === 0 ? (
-            <p className="text-muted mb-0">No payments received yet.</p>
-          ) : (
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th>Job</th>
-                  <th>Gross Amount</th>
-                  <th>Platform Fee</th>
-                  <th>Net to Worker</th>
-                  <th>Method</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment._id}>
-                    <td>{payment.applicationId?.jobId?.title || 'Job'}</td>
-                    <td>₹{payment.amount}</td>
-                    <td>₹{payment.platformFee || 0}</td>
-                    <td>₹{payment.netAmount || 0}</td>
-                    <td>{payment.paymentMethod?.replace('_', ' ') || 'Not available'}</td>
-                    <td>
-                      <Badge bg={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'info'}>
-                        {payment.status === 'completed'
-                          ? 'Received'
-                          : payment.status === 'pending'
-                          ? 'Release Pending'
-                          : 'In Process'}
-                      </Badge>
-                    </td>
-                    <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      {payment.applicationId?.status === 'accepted' ? (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          onClick={() => handleMarkComplete(payment.applicationId?._id)}
-                        >
-                          Mark Complete
-                        </Button>
-                      ) : payment.applicationId?.status === 'completed' ? (
-                        <span className="text-success small">Completed</span>
-                      ) : (
-                        <span className="text-muted small">N/A</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
-      </Card>
-    </Container>
+    <div style={{ background: '#f6f7f9', minHeight: '100vh', padding: '32px 0' }}>
+      <Container>
+        <h2 className="fw-bold mb-4" style={{ color: '#0ea5e9', letterSpacing: 0.5 }}>My Earnings</h2>
+        <Card className="mb-4" style={{ border: 'none', borderRadius: 16, boxShadow: '0 2px 12px #bae6fd33', background: '#e0f2fe' }}>
+          <Card.Body className="d-flex flex-column flex-md-row align-items-center gap-4 p-4">
+            <div style={{ flex: 1 }}>
+              <div className="fw-bold" style={{ fontSize: 22, color: '#0369a1' }}>Total Amount Received</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#0ea5e9' }}>₹{totalEarnings}</div>
+              <div className="small text-muted mt-2">
+                Gross Paid: <span style={{ color: '#222', fontWeight: 600 }}>₹{totalGrossAmount}</span> &nbsp;•&nbsp; Platform Fee (₹20/payment): <span style={{ color: '#eab308', fontWeight: 600 }}>₹{totalPlatformFee}</span> &nbsp;•&nbsp; Net to Worker: <span style={{ color: '#059669', fontWeight: 600 }}>₹{totalEarnings}</span>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
+        <Card style={{ border: 'none', borderRadius: 16, boxShadow: '0 2px 12px #d1d5db33', background: '#fff' }}>
+          <Card.Body>
+            <div className="fw-semibold mb-3" style={{ color: '#0ea5e9', fontSize: 18 }}>Payment History</div>
+            {payments.length === 0 ? (
+              <p className="text-muted mb-0">No payments received yet.</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-sm align-middle mb-0" style={{ fontSize: 16 }}>
+                  <thead style={{ background: '#f1f5f9' }}>
+                    <tr>
+                      <th>Job</th>
+                      <th>Gross Amount</th>
+                      <th>Platform Fee</th>
+                      <th>Net to Worker</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((payment) => (
+                      <tr key={payment._id}>
+                        <td>{payment.applicationId?.jobId?.title || 'Job'}</td>
+                        <td>₹{payment.amount}</td>
+                        <td>₹{payment.platformFee || 0}</td>
+                        <td>₹{payment.netAmount || 0}</td>
+                        <td>{payment.paymentMethod?.replace('_', ' ') || 'Not available'}</td>
+                        <td>
+                          <Badge bg={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'info'}>
+                            {payment.status === 'completed'
+                              ? 'Received'
+                              : payment.status === 'pending'
+                              ? 'Release Pending'
+                              : 'In Process'}
+                          </Badge>
+                        </td>
+                        <td>{new Date(payment.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          {payment.applicationId?.status === 'accepted' ? (
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() => handleMarkComplete(payment.applicationId?._id)}
+                            >
+                              Mark Complete
+                            </Button>
+                          ) : payment.applicationId?.status === 'completed' ? (
+                            <span className="text-success small">Completed</span>
+                          ) : (
+                            <span className="text-muted small">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </Container>
+    </div>
   );
 };
 

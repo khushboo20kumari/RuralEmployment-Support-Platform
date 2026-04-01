@@ -205,8 +205,8 @@ const MessageInbox = () => {
   // Main chat UI
   return (
     <div style={{ minHeight: '100vh', height: '100vh', maxHeight: '100vh', overflow: 'auto', display: 'flex', flexDirection: 'column', background: '#ece5dd' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: isMobile ? '12px 10px 8px 10px' : '24px 32px 12px 32px', background: '#075e54', borderBottom: '2px solid #25d366' }}>
-        <h4 style={{ margin: 0, fontWeight: 700, letterSpacing: 1, color: '#fff', fontSize: isMobile ? 18 : 24 }}>💬 Messages Inbox</h4>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: isMobile ? '12px 10px 8px 10px' : '24px 32px 12px 32px', background: '#0ea5e9', borderBottom: '2px solid #bae6fd' }}>
+        <h4 style={{ margin: 0, fontWeight: 700, letterSpacing: 1, color: '#fff', fontSize: isMobile ? 18 : 24 }}>Messages Inbox</h4>
         <span style={{ background: unreadCount > 0 ? '#dc3545' : '#6c757d', color: '#fff', borderRadius: 12, padding: isMobile ? '2px 8px' : '4px 14px', fontWeight: 600, fontSize: isMobile ? 13 : 15 }}>
           Unread: {unreadCount}
         </span>
@@ -228,6 +228,8 @@ const MessageInbox = () => {
                 chats.map((chat) => {
                   const info = getChatDisplayInfo(chat);
                   const isActive = selectedChatId === chat._id;
+                  // Placeholder: randomly assign online status for demo
+                  const isOnline = chat._id.charCodeAt(0) % 2 === 0; // Replace with real presence logic
                   return (
                     <div
                       key={chat._id}
@@ -238,8 +240,8 @@ const MessageInbox = () => {
                       style={{
                         padding: isMobile ? '10px 12px' : '14px 18px',
                         cursor: 'pointer',
-                        background: isActive ? '#e7fbe7' : 'transparent',
-                        borderLeft: isActive && !isMobile ? '4px solid #25d366' : '4px solid transparent',
+                        background: isActive ? '#e0f2fe' : 'transparent',
+                        borderLeft: isActive && !isMobile ? '4px solid #0ea5e9' : '4px solid transparent',
                         marginBottom: 2,
                         borderRadius: 10,
                         display: 'flex',
@@ -247,9 +249,23 @@ const MessageInbox = () => {
                         transition: 'background 0.2s',
                       }}
                     >
+                      <span style={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        background: isOnline ? '#22c55e' : '#cbd5e1',
+                        marginRight: 8,
+                        border: isOnline ? '2px solid #bbf7d0' : '2px solid #e5e7eb',
+                        boxShadow: isOnline ? '0 0 6px #22c55e55' : 'none',
+                      }} />
                       <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(info.title || 'U')}&background=25d366&color=fff&rounded=true&size=38`} alt="avatar" style={{ width: isMobile ? 32 : 38, height: isMobile ? 32 : 38, borderRadius: '50%', marginRight: 10, boxShadow: isActive ? '0 2px 8px #25d36633' : 'none' }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{info.title}</div>
+                        <div style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{info.title}
+                          <span style={{ fontSize: 11, marginLeft: 8, color: isOnline ? '#22c55e' : '#888', fontWeight: 500 }}>
+                            {isOnline ? '● Online' : '○ Offline'}
+                          </span>
+                        </div>
                         <div style={{ fontSize: isMobile ? 11 : 13, color: '#888' }}>{info.subtitle}</div>
                         <div style={{ fontSize: isMobile ? 10 : 12, color: '#aaa', marginTop: 2 }}>
                           {chat.lastMessage || 'No message yet'}
@@ -266,10 +282,29 @@ const MessageInbox = () => {
         {/* Chat Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#ece5dd', minHeight: 0 }}>
           <div style={{ background: '#075e54', color: '#fff', padding: isMobile ? '12px 10px' : '18px 28px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 22, letterSpacing: 1 }}>{selectedChatInfo?.title || 'Select a chat'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* Online status dot in header */}
+              {selectedChat && (
+                <span style={{
+                  display: 'inline-block',
+                  width: 13,
+                  height: 13,
+                  borderRadius: '50%',
+                  background: selectedChat._id.charCodeAt(0) % 2 === 0 ? '#22c55e' : '#cbd5e1',
+                  border: selectedChat._id.charCodeAt(0) % 2 === 0 ? '2px solid #bbf7d0' : '2px solid #e5e7eb',
+                  boxShadow: selectedChat._id.charCodeAt(0) % 2 === 0 ? '0 0 6px #22c55e55' : 'none',
+                  marginRight: 2,
+                }} />
+              )}
+              <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 22, letterSpacing: 1 }}>{selectedChatInfo?.title || 'Select a chat'}
+                <span style={{ fontSize: 12, marginLeft: 8, color: selectedChat && selectedChat._id.charCodeAt(0) % 2 === 0 ? '#bbf7d0' : '#e0e0e0', fontWeight: 500 }}>
+                  {selectedChat && selectedChat._id.charCodeAt(0) % 2 === 0 ? '● Online' : '○ Offline'}
+                </span>
+              </div>
+            </div>
             <div style={{ fontSize: isMobile ? 11 : 14, color: '#e0e0e0' }}>{selectedChatInfo?.subtitle || ''}</div>
           </div>
-          <div ref={messagesContainerRef} style={{overflowY:"auto", flex: 1, minHeight: 0, background: 'url(https://i.imgur.com/4M7IWwP.png)', display: 'flex', flexDirection: 'column', padding: isMobile ? '10px 6px 8px 6px' : '18px 18px 10px 18px', gap: 2 }}>
+          <div ref={messagesContainerRef} style={{overflowY:"auto", flex: 1, minHeight: 0, background: '#f7fafc', display: 'flex', flexDirection: 'column', padding: isMobile ? '10px 6px 8px 6px' : '18px 18px 10px 18px', gap: 2 }}>
             {messages.length === 0 ? (
               <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No messages yet.</div>
             ) : (
@@ -279,56 +314,66 @@ const MessageInbox = () => {
                 return (
                   <div
                     key={msg._id}
-                    style={{display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: isMobile ? 4 : 8}}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      flexDirection: isMe ? 'row-reverse' : 'row',
+                      gap: 10,
+                      marginBottom: isMobile ? 6 : 12,
+                    }}
                   >
-                    {showSenderName && (
-                      <div style={{ fontWeight: 600, color: '#075e54', marginBottom: 2, marginLeft: 6, fontSize: isMobile ? 12 : 14 }}>{msg.senderId?.name}</div>
-                    )}
-                    <div
-                      style={{
-                        display: 'inline-block',
-                        maxWidth: isMobile ? '90%' : '75%',
-                        minWidth: 40,
-                        padding: isMobile ? '8px 12px' : '12px 18px',
-                        borderRadius: 18,
-                        background: isMe ? '#dcf8c6' : '#fff',
-                        color: '#222',
-                        fontSize: isMobile ? 14 : 16,
-                        boxShadow: isMe ? '0 2px 8px 0 #25d36633' : '0 1px 4px 0 rgba(0,0,0,0.08)',
-                        wordBreak: 'break-word',
-                        marginLeft: isMe ? (isMobile ? 12 : 24) : 0,
-                        marginRight: isMe ? 0 : (isMobile ? 12 : 24),
-                        borderBottomRightRadius: isMe ? 6 : 18,
-                        borderBottomLeftRadius: isMe ? 18 : 6,
-                        borderTopLeftRadius: 18,
-                        borderTopRightRadius: 18,
-                        transition: 'background 0.2s',
-                        border: isMe ? '1px solid #b2f7cc' : '1px solid #ece5dd',
-                        position: 'relative',
-                      }}
-                    >
-                      <div>{msg.message}</div>
-                      <div style={{ fontSize: isMobile ? 10 : 12, color: '#888', marginTop: 4, textAlign: 'right' }}>{new Date(msg.createdAt).toLocaleTimeString('en-IN')}</div>
-                      {isMe && (
-                        <span style={{ position: 'absolute', bottom: 6, right: 10, fontSize: isMobile ? 10 : 12, color: '#25d366' }}>✓</span>
+                    {/* Avatar for each message */}
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderId?.name || 'U')}&background=${isMe ? '0ea5e9' : 'bae6fd'}&color=fff&rounded=true&size=32`} alt="avatar" style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', boxShadow: '0 1px 4px #bae6fd33' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', width: '100%' }}>
+                      {showSenderName && (
+                        <div style={{ fontWeight: 700, color: '#0ea5e9', marginBottom: 2, fontSize: isMobile ? 12 : 14 }}>{msg.senderId?.name}</div>
                       )}
+                      <div
+                        style={{
+                          display: 'inline-block',
+                          maxWidth: isMobile ? '80%' : '70%',
+                          minWidth: 40,
+                          padding: isMobile ? '9px 14px' : '13px 20px',
+                          borderRadius: 18,
+                          background: isMe ? 'linear-gradient(90deg, #bae6fd 0%, #0ea5e9 100%)' : '#f1f5f9',
+                          color: isMe ? '#fff' : '#222',
+                          fontSize: isMobile ? 14 : 16,
+                          boxShadow: isMe ? '0 2px 8px 0 #bae6fd33' : '0 1px 4px 0 rgba(0,0,0,0.06)',
+                          wordBreak: 'break-word',
+                          marginLeft: isMe ? 0 : 0,
+                          marginRight: isMe ? 0 : 0,
+                          borderBottomRightRadius: isMe ? 6 : 18,
+                          borderBottomLeftRadius: isMe ? 18 : 6,
+                          borderTopLeftRadius: 18,
+                          borderTopRightRadius: 18,
+                          transition: 'background 0.2s',
+                          border: isMe ? '1.5px solid #0ea5e9' : '1.5px solid #e0e7ef',
+                          position: 'relative',
+                        }}
+                      >
+                        <div>{msg.message}</div>
+                        <div style={{ fontSize: isMobile ? 10 : 12, color: isMe ? '#e0f2fe' : '#888', marginTop: 4, textAlign: 'right' }}>{new Date(msg.createdAt).toLocaleTimeString('en-IN')}</div>
+                        {isMe && (
+                          <span style={{ position: 'absolute', bottom: 6, right: 10, fontSize: isMobile ? 10 : 12, color: '#bae6fd' }}>✓</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })
             )}
           </div>
-          <div style={{ background: '#f0f0f0', borderTop: '1px solid #eee', padding: isMobile ? '8px 6px' : '14px 18px', position: 'relative', width: '100%' }}>
+          <div style={{ background: '#fff', borderTop: '1px solid #e5e7eb', padding: isMobile ? '8px 6px' : '14px 18px', position: 'relative', width: '100%' }}>
             <Form onSubmit={handleSendMessage} style={{ width: '100%' }}>
-              <div style={{ display: 'flex', gap: isMobile ? 4 : 10 }}>
+              <div style={{ display: 'flex', gap: isMobile ? 4 : 10, alignItems: 'center' }}>
                 <Form.Control
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
                   disabled={!selectedChat || sending}
-                  style={{ borderRadius: 20, fontSize: isMobile ? 13 : 16, padding: isMobile ? '7px 12px' : '10px 18px', flex: 1, border: '1px solid #ccc', background: '#fff', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.04)' }}
+                  style={{ borderRadius: 18, fontSize: isMobile ? 14 : 16, padding: isMobile ? '8px 14px' : '12px 20px', flex: 1, border: '1.5px solid #e5e7eb', background: '#f7fafc', boxShadow: 'none' }}
                 />
-                <Button type="submit" disabled={!selectedChat || !newMessage.trim() || sending} style={{ borderRadius: 20, minWidth: isMobile ? 44 : 64, background: '#25d366', border: 'none', fontWeight: 700, fontSize: isMobile ? 13 : 16, boxShadow: '0 2px 8px 0 #25d36633' }}>
+                <Button type="submit" disabled={!selectedChat || !newMessage.trim() || sending} style={{ borderRadius: 16, minWidth: isMobile ? 44 : 64, background: '#0ea5e9', border: 'none', fontWeight: 700, fontSize: isMobile ? 14 : 16, color: '#fff', boxShadow: '0 2px 8px 0 #bae6fd33', transition: 'background 0.18s' }}>
                   {sending ? '...' : 'Send'}
                 </Button>
               </div>

@@ -1,16 +1,14 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Alert, Form, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Alert, Form, Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GoogleLogin } from '@react-oauth/google';
 import { AuthContext } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 
-const Login = () => {
+const Login = ({ isModal }) => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [googleUserType, setGoogleUserType] = useState('worker');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,31 +30,6 @@ const Login = () => {
     }
 
     navigate('/');
-  };
-
-  const handleLocalLogin = async (e) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      setError('Email and password are required');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-
-      const response = await authAPI.login({ email, password });
-      login(response.data.token, response.data.user);
-      toast.success('Login successful');
-      redirectByRole(response.data.user.userType);
-    } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -97,81 +70,52 @@ const Login = () => {
   };
 
   return (
-    <Container className="my-3 my-md-5 py-3">
-      <Row className="justify-content-center">
-        <Col xs={12} sm={10} md={8} lg={5}>
-          <Card className="shadow-lg border-0 rounded-4">
-            <Card.Body className="p-4 p-md-5">
-              <div className="text-center mb-4">
-                <div className="mb-3" style={{ fontSize: '3rem' }}>🔐</div>
-                <h2 className="fw-bold mb-2">Welcome Back!</h2>
-                <p className="text-muted">Login to your account</p>
+    <div className={isModal ? 'auth-modal-inner' : ''} style={isModal ? { width: '100%' } : {}}>
+      <div className="w-100 d-flex justify-content-center">
+        <div style={{ width: isModal ? '100%' : 380, maxWidth: '100%' }}>
+          <div className="border-0 rounded-4 p-0" style={{ boxShadow: isModal ? 'none' : '0 4px 32px #bae6fd33', background: 'linear-gradient(135deg, #f0f7ff 0%, #fff 100%)' }}>
+            <div className="p-0">
+              <div className="text-center mb-3 pt-2">
+                <div style={{ fontSize: 38, color: '#0ea5e9', marginBottom: 6 }}>
+                  <span role="img" aria-label="login">🔐</span>
+                </div>
+                <h2 className="fw-bold mb-1" style={{ fontSize: '2.1rem', color: '#0ea5e9', letterSpacing: 0.2 }}>Welcome Back!</h2>
+                <p className="text-muted mb-0" style={{ fontSize: '1.08rem' }}>Login to access jobs, track work, and get paid securely</p>
               </div>
-              
+              <hr style={{ border: 0, borderTop: '1.5px solid #e5e7eb', margin: '0 0 18px 0' }} />
               {error && <Alert variant="danger" className="rounded-3">{error}</Alert>}
-
-              <Form onSubmit={handleLocalLogin}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">📧 Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    autoComplete="email"
-                  />
+              <div className="d-flex flex-column align-items-center gap-2 mb-3">
+                <Form.Group className="mb-2 w-100">
+                  <Form.Label className="fw-semibold mb-1">Login as</Form.Label>
+                  <Form.Select
+                    value={googleUserType}
+                    onChange={(e) => setGoogleUserType(e.target.value)}
+                    size="lg"
+                    style={{ cursor: 'pointer', borderRadius: 10, border: '1.5px solid #bae6fd', background: '#f8fafc' }}
+                  >
+                    <option value="worker">👷 Worker</option>
+                    <option value="employer">🏢 Employer</option>
+                    <option value="admin">🛡️ Admin</option>
+                  </Form.Select>
                 </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">🔑 Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                  />
-                </Form.Group>
-
-                <Button type="submit" className="w-100 fw-bold" disabled={loading}>
-                  {loading ? 'Logging in...' : 'Login with Email'}
+                <div style={{ width: 240 }}>
+                  <div className="google-btn-hover">
+                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} width="100%" text="signin_with" shape="rectangular" size="large" />
+                  </div>
+                  <div className="text-center mt-2" style={{ fontWeight: 500, color: '#0ea5e9', fontSize: '1.08rem', letterSpacing: 0.1 }}>Login with Google</div>
+                </div>
+              </div>
+              <div className="text-center mt-3 pb-2">
+                <span className="text-muted">Don't have an account?</span>
+                <Button variant="link" className="fw-semibold ps-2" style={{ color: '#0ea5e9', fontSize: '1.08rem', textDecoration: 'underline' }} onClick={() => window.dispatchEvent(new CustomEvent('showRegisterModal'))}>
+                  Register Now
                 </Button>
-              </Form>
-              
-              <hr className="my-4" />
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">👤 Select Role</Form.Label>
-                <Form.Select
-                  value={googleUserType}
-                  onChange={(e) => setGoogleUserType(e.target.value)}
-                >
-                  <option value="worker">👷 Worker (काम करने वाला)</option>
-                  <option value="employer">🏢 Employer (काम देने वाला)</option>
-                  <option value="admin">🔐 Admin (प्रशासक)</option>
-                </Form.Select>
-              </Form.Group>
-
-              <div className="my-4 d-flex justify-content-center">
-                <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
               </div>
-
-              <p className="text-muted text-center small mb-3">Google se Worker / Employer / Admin login support enabled hai.</p>
-
-              <hr className="my-4" />
-
-              <div className="text-center">
-                <p className="mb-0">Don't have an account?</p>
-                <Link to="/register" className="btn btn-outline-primary mt-2 px-4 rounded-3 fw-semibold">
-                  ✨ Register Here
-                </Link>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
-
 export default Login;

@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Tabs, Tab, ProgressBar } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { applicationAPI, workerAPI, paymentAPI, messageAPI } from '../services/api';
 import { useLanguage } from '../hooks/useLanguage';
 import { AuthContext } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
-// import SimpleBarChart from '../components/SimpleBarChart';
 
 const WorkerDashboard = () => {
   const { t } = useLanguage();
   const { user } = useContext(AuthContext);
-  const location = useLocation();
   const [stats, setStats] = useState({
     activeApplications: 0,
     acceptedApplications: 0,
@@ -33,7 +31,6 @@ const WorkerDashboard = () => {
     if (!window.confirm(t('workerDashboard.markCompletedConfirm'))) {
       return;
     }
-
     setCompletingId(applicationId);
     try {
       await applicationAPI.markAsCompleted(applicationId);
@@ -53,14 +50,11 @@ const WorkerDashboard = () => {
         paymentAPI.getWorkerPayments(),
         workerAPI.getProfile(),
       ]);
-
       const apps = applicationsRes.data.applications || [];
       const payments = paymentsRes.data.payments || [];
       const profile = profileRes.data.worker;
-
       setApplications(apps);
       setProfile(profile);
-
       // Calculate stats
       const active = apps.filter((a) => ['applied', 'shortlisted'].includes(a.status)).length;
       const accepted = apps.filter((a) => a.status === 'accepted').length;
@@ -68,14 +62,12 @@ const WorkerDashboard = () => {
       const earnings = payments
         .filter((p) => p.status === 'completed')
         .reduce((sum, p) => sum + (p.netAmount || 0), 0);
-
       setStats({
         activeApplications: active,
         acceptedApplications: accepted,
         completedJobs: completed,
         totalEarnings: earnings,
       });
-
       // Calculate profile completion
       const fields = [
         profile?.skills?.length > 0,
@@ -86,7 +78,6 @@ const WorkerDashboard = () => {
       ];
       const completion = (fields.filter(Boolean).length / fields.length) * 100;
       setProfileCompletion(Math.round(completion));
-
       try {
         const unreadRes = await messageAPI.getUnreadCount();
         setUnreadCount(Number(unreadRes.data?.unreadCount || 0));
@@ -100,13 +91,6 @@ const WorkerDashboard = () => {
     }
   };
 
-  const formatUpdatedBy = (updatedBy) => {
-    if (updatedBy === 'worker') return 'Worker';
-    if (updatedBy === 'employer') return 'Employer';
-    if (updatedBy === 'admin') return 'Admin';
-    return 'System';
-  };
-
   if (loading) {
     return (
       <Container className="my-5 text-center">
@@ -115,144 +99,104 @@ const WorkerDashboard = () => {
     );
   }
 
-  // If on /messages or /messages/:id, show MessageInbox inside DashboardLayout (so sidebar is always visible)
-  if (location.pathname.startsWith('/messages')) {
-    // Lazy import to avoid circular dependency
-    const MessageInbox = React.lazy(() => import('./MessageInbox'));
-    return (
-      <Container className="py-4">
-        <DashboardLayout
-          title={<span style={{display:'flex',alignItems:'center',gap:10}}>
-            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name||'U')}&background=10b981&color=fff&rounded=true&size=48`} alt="avatar" style={{width:48,height:48,borderRadius:'50%',boxShadow:'0 2px 8px rgba(16,185,129,0.15)'}} />
-            <span>Welcome, {user?.name?.split(' ')[0]||'User'}!</span>
-          </span>}
-          subtitle={<span style={{display:'flex',alignItems:'center',gap:12}}>
-            <span>Direct coordination with Admin/Employer. No job apply needed.</span>
-          </span>}
-          menuItems={[
-            { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
-            { to: '/messages', label: 'Messages', icon: '💬' },
-            { to: '/worker/payments', label: 'Payments', icon: '💳' },
-            { to: '/profile', label: 'Profile', icon: '👤' },
-          ]}
-          accountInfo={{
-            name: user?.name,
-            email: user?.email,
-            type: 'Worker',
-          }}
-        >
-          <React.Suspense fallback={<div className="text-center my-5"><div className="spinner-border text-primary" /></div>}>
-            <MessageInbox />
-          </React.Suspense>
-        </DashboardLayout>
-      </Container>
-    );
-  }
-
-  // Default dashboard content
   return (
-    <Container className="py-4">
-      <DashboardLayout
-        title={<span style={{display:'flex',alignItems:'center',gap:10}}>
-          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name||'U')}&background=10b981&color=fff&rounded=true&size=48`} alt="avatar" style={{width:48,height:48,borderRadius:'50%',boxShadow:'0 2px 8px rgba(16,185,129,0.15)'}} />
-          <span>Welcome, {user?.name?.split(' ')[0]||'User'}!</span>
-        </span>}
-        subtitle={<span style={{display:'flex',alignItems:'center',gap:12}}>
-          <span>Direct coordination with Admin/Employer. No job apply needed.</span>
-        </span>}
-        menuItems={[
-          { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
-          { to: '/messages', label: 'Messages', icon: '💬' },
-          { to: '/worker/payments', label: 'Payments', icon: '💳' },
-          { to: '/profile', label: 'Profile', icon: '👤' },
-        ]}
-        accountInfo={{
-          name: user?.name,
-          email: user?.email,
-          type: 'Worker',
-        }}
-      >
-      {/* Only show Messages, Payments, and Profile update */}
-      {/* Beautiful info section for workers */}
-      <Row className="g-4">
-        <Col md={12}>
-          <div style={{
-            background: 'linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%)',
-            border: '2px solid #bae6fd',
-            borderRadius: 18,
-            padding: '2.5rem 1.5rem',
-            marginBottom: 32,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 32,
-            boxShadow: '0 4px 24px rgba(59,130,246,0.08)'
-          }}>
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Worker" style={{width: 120, height: 120, borderRadius: '50%', boxShadow: '0 2px 8px #bae6fd'}} />
-            <div>
-              <h2 style={{fontWeight: 700, color: '#0ea5e9', marginBottom: 12}}>Welcome to Your Worker Panel!</h2>
-              <ul style={{fontSize: 18, color: '#0369a1', marginBottom: 0, paddingLeft: 20}}>
-                <li>Apply for jobs directly from the platform</li>
-                <li>Chat with admin or employer for any help</li>
-                <li>Mark your work as complete after finishing</li>
-                <li>Track your payments and update your profile</li>
-              </ul>
-              <div style={{marginTop: 18, color: '#059669', fontWeight: 600, fontSize: 20}}>
-                Your success is our priority! 🚀
+    <div className="worker-dashboard-layout" style={{ display: 'flex', minHeight: '100vh', background: '#f6f7f9', marginTop: 0, paddingTop: 0 }}>
+      {/* Sidebar (40%) */}
+      <div className="worker-dashboard-sidebar" style={{ width: '40%', minWidth: 240, maxWidth: 420, background: '#e0f2fe', borderRight: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 18px', boxSizing: 'border-box', marginTop: 0 }}>
+        <div style={{ maxWidth: 320, width: '100%' }}>
+          <Card className="mb-4" style={{ border: 'none', borderRadius: 18, boxShadow: '0 2px 12px #bae6fd33', background: '#fff' }}>
+            <Card.Body className="d-flex flex-column align-items-center gap-3 p-4">
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name||'U')}&background=0ea5e9&color=fff&rounded=true&size=80`} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', boxShadow: '0 2px 8px #bae6fd33', border: '3px solid #e0f2fe' }} />
+              <div className="fw-bold" style={{ color: '#0ea5e9', fontSize: 22 }}>{user?.name?.split(' ')[0] || 'Worker'}</div>
+              <div className="text-muted" style={{ fontSize: 15 }}>{user?.email}</div>
+              <div style={{ fontSize: 15, color: '#059669', fontWeight: 600 }}>Worker</div>
+              <div className="mt-3 w-100">
+                <div className="fw-semibold mb-2" style={{ color: '#0369a1' }}>Quick Links</div>
+                <div className="d-flex flex-wrap gap-2">
+                  <Button as={Link} to="/jobs" variant="outline-primary" size="sm">Find Jobs</Button>
+                  <Button as={Link} to="/worker/applications" variant="outline-success" size="sm">My Applications</Button>
+                  <Button as={Link} to="/worker/payments" variant="outline-info" size="sm">Payments</Button>
+                  <Button as={Link} to="/profile" variant="outline-dark" size="sm">Edit Profile</Button>
+                </div>
               </div>
-            </div>
-          </div>
-        </Col>
-                {/* Mark as Complete for accepted jobs */}
-                {applications.filter(a => a.status === 'accepted').length > 0 && (
-                  <Col md={12}>
-                    <Card className="border-0 rounded-4 shadow-lg mb-4">
-                      <Card.Body className="p-4 text-center">
-                        <div className="fs-1 mb-2">✅</div>
-                        <h4 className="fw-bold mb-2">Mark Work as Completed</h4>
-                        <p className="text-muted mb-3">Click below after you finish your assigned work. Employer/Admin will verify and release payment.</p>
-                        {applications.filter(a => a.status === 'accepted').map(a => (
-                          <Button
-                            key={a._id}
-                            variant="success"
-                            size="md"
-                            className="m-1"
-                            disabled={completingId === a._id}
-                            onClick={() => handleMarkCompleted(a._id)}
-                          >
-                            {completingId === a._id ? 'Marking...' : `Mark Complete (Job: ${a.jobId?.title || 'N/A'})`}
-                          </Button>
-                        ))}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                )}
-        {/* Show Message Employer button if assigned to a job */}
-        {applications.filter(a => ['accepted','completed'].includes(a.status) && a.employerId?.userId?._id).length > 0 && (
-          <Col md={12}>
-            <Card className="border-0 rounded-4 shadow-lg mb-4">
-              <Card.Body className="p-4 text-center">
-                <div className="fs-1 mb-2">💬</div>
-                <h4 className="fw-bold mb-2">Message Employer</h4>
-                <p className="text-muted mb-3">You can directly chat with your employer for assigned jobs.</p>
-                {applications.filter(a => ['accepted','completed'].includes(a.status) && a.employerId?.userId?._id).map(a => (
-                  <Button
-                    key={a._id}
-                    as={Link}
-                    to={`/messages/${a.employerId.userId._id}`}
-                    variant="primary"
-                    size="md"
-                    className="m-1"
-                  >
-                    Message {a.employerId.userId.name || 'Employer'} (Job: {a.jobId?.title || 'N/A'})
-                  </Button>
-                ))}
-              </Card.Body>
-            </Card>
-          </Col>
-        )}
-      </Row>
-      </DashboardLayout>
-    </Container>
+            </Card.Body>
+          </Card>
+        </div>
+      </div>
+      {/* Main Content (60%) */}
+      <div className="worker-dashboard-main no-navbar-gap" style={{ width: '60%', minWidth: 0, padding: '0', marginTop: 0, marginBlockStart: 0, paddingTop: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
+        <div style={{ width: '100%', maxWidth: 700 }}>
+          {/* Stats Row */}
+          <Row className="dashboard-stats-row mb-4">
+            <Col md={3} sm={6} xs={12} className="mb-3">
+              <Card className="dashboard-stats-card">
+                <div className="stat-label">Active Applications</div>
+                <div className="stat-value">{stats.activeApplications}</div>
+              </Card>
+            </Col>
+            <Col md={3} sm={6} xs={12} className="mb-3">
+              <Card className="dashboard-stats-card">
+                <div className="stat-label">Accepted Jobs</div>
+                <div className="stat-value">{stats.acceptedApplications}</div>
+              </Card>
+            </Col>
+            <Col md={3} sm={6} xs={12} className="mb-3">
+              <Card className="dashboard-stats-card">
+                <div className="stat-label">Completed Jobs</div>
+                <div className="stat-value">{stats.completedJobs}</div>
+              </Card>
+            </Col>
+            <Col md={3} sm={6} xs={12} className="mb-3">
+              <Card className="dashboard-stats-card">
+                <div className="stat-label">Total Earnings</div>
+                <div className="stat-value">₹{stats.totalEarnings}</div>
+              </Card>
+            </Col>
+          </Row>
+          {/* Recent Applications */}
+          <Card className="mb-4">
+            <Card.Header className="fw-bold" style={{ background: '#e0f2fe' }}>Recent Applications</Card.Header>
+            <Card.Body style={{ padding: '1.2rem' }}>
+              {applications && applications.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Job Title</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications.slice(0, 5).map(app => (
+                        <tr key={app._id}>
+                          <td>{app.job?.title || 'N/A'}</td>
+                          <td><span className="badge bg-primary">{app.status}</span></td>
+                          <td>{app.createdAt ? new Date(app.createdAt).toLocaleDateString() : '-'}</td>
+                          <td>
+                            {app.status === 'accepted' && (
+                              <Button size="sm" variant="success" disabled={completingId === app._id} onClick={() => handleMarkCompleted(app._id)}>
+                                {completingId === app._id ? 'Marking...' : 'Mark Completed'}
+                              </Button>
+                            )}
+                            {app.status === 'completed' && (
+                              <span className="text-success fw-bold">Completed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-muted">No recent applications found.</div>
+              )}
+            </Card.Body>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -314,8 +314,23 @@ const AdminDashboard = () => {
     );
   }
 
+  // Role header card
+  const roleHeader = (
+    <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{background:'linear-gradient(135deg, #1f2937 0%, #6366f1 100%)'}}>
+      <Card.Body className="d-flex align-items-center gap-3 p-4">
+        <img src={`https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff&rounded=true&size=64`} alt="avatar" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(99,102,241,0.15)'}} />
+        <div>
+          <h3 className="fw-bold mb-1 text-white" style={{letterSpacing:0.5}}>Admin <span style={{fontSize:22,marginLeft:8}}>🛡️ Admin</span></h3>
+          <div className="text-white-50" style={{fontSize:'1.08rem'}}>Welcome to your Admin Dashboard</div>
+        </div>
+      </Card.Body>
+    </Card>
+  );
+
   return (
     <Container className="my-4 my-md-5">
+      {roleHeader}
+
       {/* Hero Card with Dark Gradient */}
       <Card className="border-0 shadow-lg rounded-4 mb-4 overflow-hidden" style={{
         background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',

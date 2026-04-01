@@ -49,7 +49,7 @@ const Home = () => {
         ))}
       </div>
 
-      {/* ===== HERO SECTION (no shadow) ===== */}
+      {/* ===== HERO SECTION (no emojis, improved text) ===== */}
       <div className="hero-section" style={{ background: '#f0fdfa', borderBottom: '1px solid #bae6fd' }}>
         <div className="container py-5">
           <div className="row align-items-center">
@@ -68,7 +68,7 @@ const Home = () => {
               </p>
             </div>
             <div className="col-md-5 text-center">
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Rural Worker" style={{maxWidth:'90%', height:'220px', borderRadius:'18px'}} />
+              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Rural Worker" style={{maxWidth:'90%', height:'220px', borderRadius:'18px', boxShadow:'0 4px 24px #bae6fd'}} />
             </div>
           </div>
         </div>
@@ -133,22 +133,6 @@ const Home = () => {
                 <b>Private Chat Groups:</b> For every job, a private chat group is created where the assigned worker, the employer, and the admin can communicate securely. This ensures all important information and updates are shared in one place, making the process smooth and transparent.
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== SIMPLE & SECURE PROCESS SECTION (neutral bg) ===== */}
-      <div className="container py-5" style={{background: '#f8fafc', borderRadius: '18px', marginBottom: 32}}>
-        <h2 className="text-center mb-4" style={{color:'#0ea5e9', fontWeight:700}}>Simple & Secure Process</h2>
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <ol style={{fontSize:'1.15rem', color:'#222', background: 'none', padding: '0 0 0 1.2em'}}>
-              <li style={{marginBottom: 10}}>Employers post jobs or receive assigned work</li>
-              <li style={{marginBottom: 10}}>Admin connects workers with employers</li>
-              <li style={{marginBottom: 10}}>Workers complete the job</li>
-              <li style={{marginBottom: 10}}>Employer makes payment on platform</li>
-              <li>Platform safely pays workers</li>
-            </ol>
           </div>
         </div>
       </div>
