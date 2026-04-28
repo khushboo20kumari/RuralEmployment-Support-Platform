@@ -11,8 +11,6 @@ import Home from './pages/Home';
 // import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import WorkerDashboard from './pages/WorkerDashboard';
-import EmployerDashboard from './pages/EmployerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import JobList from './pages/JobList';
 import JobDetails from './pages/JobDetails';
@@ -39,10 +37,10 @@ const HomeResolver = () => {
 
   if (!user) return <Home />;
 
-  if (user.userType === 'worker') return <Navigate to="/worker/dashboard" replace />;
-  if (user.userType === 'employer') return <Navigate to="/employer/dashboard" replace />;
+  // Only admin dashboard exists, others go to Home
   if (user.userType === 'admin') return <Navigate to="/admin/dashboard" replace />;
 
+  // For worker/employer, show Home (no dashboard)
   return <Home />;
 };
 
@@ -52,22 +50,6 @@ const RolePageLayout = ({ children }) => {
   if (!user) return children;
 
   const menuByRole = {
-    worker: [
-      { to: '/worker/dashboard', label: 'Dashboard', icon: '🏠' },
-      { to: '/jobs', label: 'Public Jobs', icon: '📋' },
-      { to: '/messages', label: 'Messages', icon: '💬' },
-      { to: '/worker/applications', label: 'My Applications', icon: '📝' },
-      { to: '/worker/payments', label: 'Payments', icon: '💳' },
-      { to: '/profile', label: 'Account', icon: '👤' },
-    ],
-    employer: [
-      { to: '/employer/dashboard', label: 'Dashboard', icon: '🏠' },
-      { to: '/employer/post-job', label: 'Post New Job', icon: '➕' },
-      { to: '/employer/payments', label: 'Payments', icon: '💳' },
-      { to: '/jobs', label: 'Public Jobs', icon: '📋' },
-      { to: '/messages', label: 'Messages', icon: '💬' },
-      { to: '/profile', label: 'Account', icon: '👤' },
-    ],
   };
 
   const titleByRole = {
@@ -131,15 +113,6 @@ function App() {
               />
               <Route path="/jobs/:id" element={<JobDetails />} />
             
-            {/* Worker Routes */}
-            <Route 
-              path="/worker/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['worker']}>
-                  <WorkerDashboard />
-                </ProtectedRoute>
-              } 
-            />
             <Route 
               path="/worker/applications" 
               element={
@@ -161,15 +134,6 @@ function App() {
               } 
             />
             
-            {/* Employer Routes */}
-            <Route 
-              path="/employer/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['employer']}>
-                  <EmployerDashboard />
-                </ProtectedRoute>
-              } 
-            />
             <Route 
               path="/employer/post-job" 
               element={

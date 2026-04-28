@@ -48,13 +48,6 @@ const Navbar = () => {
     toggleLanguage();
   };
 
-  const dashboardRoute = user?.userType === 'worker'
-    ? '/worker/dashboard'
-    : user?.userType === 'employer'
-    ? '/employer/dashboard'
-    : user?.userType === 'admin'
-    ? '/admin/dashboard'
-    : '/worker/dashboard';
 
   return (
     <>
@@ -116,8 +109,8 @@ const Navbar = () => {
               </div>
               {user ? (
                 <>
-                  <Nav.Link as={Link} to={dashboardRoute} className="nav-link-item nav-dashboard-link px-3 py-2 rounded-pill fw-bold" style={{fontSize:'1.08rem',color:'#fff',background:'linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%)', boxShadow:'0 2px 8px #bae6fd33', marginRight:2}}>
-                    📊 Dashboard
+                  <Nav.Link as={Link} to="/jobs" className="nav-link-item px-3 py-2 rounded-pill fw-semibold" style={{fontSize:'1.08rem', color:'#0369a1', background:'#e0f2fe', marginRight:2}}>
+                    👷 Worker
                   </Nav.Link>
                   <Nav.Link as={Link} to="/messages" className="nav-link-item position-relative px-3 py-2 rounded-pill fw-semibold" style={{fontSize:'1.08rem',color:'#0369a1',background:'#e0f2fe',marginRight:2}}>
                     💬 Messages

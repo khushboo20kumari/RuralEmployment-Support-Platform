@@ -316,7 +316,7 @@ const AdminDashboard = () => {
 
   // Role header card
   const roleHeader = (
-    <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{background:'linear-gradient(135deg, #1f2937 0%, #6366f1 100%)'}}>
+    <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden mx-auto" style={{background:'linear-gradient(135deg, #1f2937 0%, #6366f1 100%)', maxWidth: 700}}>
       <Card.Body className="d-flex align-items-center gap-3 p-4">
         <img src={`https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff&rounded=true&size=64`} alt="avatar" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(99,102,241,0.15)'}} />
         <div>
@@ -328,92 +328,51 @@ const AdminDashboard = () => {
   );
 
   return (
-    <Container className="my-4 my-md-5">
+    <Container className="py-5" style={{ minHeight: '100vh', background: '#f6f7f9' }}>
       {roleHeader}
-
-      {/* Hero Card with Dark Gradient */}
-      <Card className="border-0 shadow-lg rounded-4 mb-4 overflow-hidden" style={{
-        background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-        animation: 'fadeInUp 0.5s ease-out'
-      }}>
-        <Card.Body className="p-4">
-          <Row className="align-items-center">
-            <Col md={8}>
-              <div className="d-flex align-items-center">
-                <div className="fs-1 me-3">🔐</div>
-                <div>
-                  <h2 className="mb-1 text-white fw-bold">{t('admin.title')}</h2>
-                  <p className="mb-0 text-white-50">Monitor users, jobs, applications, and payments from one place.</p>
-                </div>
-              </div>
-            </Col>
-            <Col md={4} className="text-md-end">
-              <div className="d-flex justify-content-md-end gap-2 flex-wrap">
-                <div className="text-white text-md-end">
-                  <h4 className="mb-0">₹{stats.platformRevenue || 0}</h4>
-                  <small className="text-white-50">Platform Revenue</small>
-                </div>
-                <Button as={Link} to="/messages" variant="light" size="sm">
-                  💬 Messages {unreadMessages > 0 ? `(${unreadMessages})` : ''}
-                </Button>
-              </div>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
-
       {/* Stats Cards with Gradient Backgrounds */}
-      <Row className="g-4 mb-4">
-        <Col md={3} sm={6}>
-          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+      <Row className="g-4 mb-4 justify-content-center">
+        <Col md={3} sm={6} xs={12} className="mb-3">
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift text-center" style={{
             transition: 'all 0.3s ease',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)'
           }}>
             <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div className="fs-2">👥</div>
-                <Badge bg="primary" className="rounded-pill">Users</Badge>
-              </div>
+              <div className="fs-2">👥</div>
               <h3 className="fw-bold text-primary mb-1">{stats.totalUsers}</h3>
               <div className="text-muted small">{t('admin.totalUsers')}</div>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} sm={6}>
-          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+        <Col md={3} sm={6} xs={12} className="mb-3">
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift text-center" style={{
             transition: 'all 0.3s ease',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
           }}>
             <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div className="fs-2">💼</div>
-                <Badge bg="success" className="rounded-pill">Jobs</Badge>
-              </div>
+              <div className="fs-2">💼</div>
               <h3 className="fw-bold text-success mb-1">{stats.totalJobs}</h3>
               <div className="text-muted small">{t('admin.totalJobs')}</div>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} sm={6}>
-          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+        <Col md={3} sm={6} xs={12} className="mb-3">
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift text-center" style={{
             transition: 'all 0.3s ease',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
           }}>
             <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div className="fs-2">⏳</div>
-                <Badge bg="warning" text="dark" className="rounded-pill">Open</Badge>
-              </div>
+              <div className="fs-2">⏳</div>
               <h3 className="fw-bold text-warning mb-1">{stats.openJobs || 0}</h3>
               <div className="text-muted small">Open Jobs</div>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3} sm={6}>
-          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift" style={{
+        <Col md={3} sm={6} xs={12} className="mb-3">
+          <Card className="border-0 shadow-sm rounded-4 h-100 hover-lift text-center" style={{
             transition: 'all 0.3s ease',
             cursor: 'pointer',
             background: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)'
